@@ -38,7 +38,7 @@ builder.Services.AddSingleton<IGraphQLClient, GraphQLHttpClient>(serviceProvider
 builder.Services.AddDbContext<SqlDatabaseContext>((serviceProvider, options) =>
 {
     var settings = serviceProvider.GetRequiredService<IOptions<PostgreSqlSettings>>();
-    options.UseNpgsql(settings.Value.ConnectionString);
+    options.UseNpgsql(settings.Value.ConnectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName));
 });
 
 builder.Services.AddSingleton<IQdrantClient, QdrantClient>(serviceProvider =>
