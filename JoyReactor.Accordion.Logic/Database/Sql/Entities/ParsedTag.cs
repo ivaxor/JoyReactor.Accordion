@@ -9,19 +9,16 @@ public record ParsedTag
 {
     public ParsedTag() { }
 
-    public ParsedTag(Tag tag)
+    public ParsedTag(Tag tag, ParsedTag parentTag = null)
     {
         Id = tag.NumberId.ToGuid();
-
         MainTagId = tag.NodeId.Equals(tag.MainTag.NodeId, StringComparison.Ordinal) ? null : tag.MainTag.NumberId.ToGuid();
-        ParentId = tag.Hierarchy.Where(h => !tag.NodeId.Equals(h.NodeId, StringComparison.Ordinal)).FirstOrDefault()?.NumberId.ToGuid();
-
+        ParentId = parentTag?.Id ?? tag.Hierarchy.Where(h => !tag.NodeId.Equals(h.NodeId, StringComparison.Ordinal)).FirstOrDefault()?.NumberId.ToGuid();
         NumberId = tag.NumberId;
         Name = tag.Name;
         PostCount = tag.PostCount.Value;
         SubscriberCount = tag.SubscriberCount.Value;
-        SubTagsCount = tag.Pager.SubTagsTotalCount.Value;
-
+        SubTagsCount = tag.Pager.TotalCount.Value;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }

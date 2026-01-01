@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Client.Abstractions;
+using JoyReactor.Accordion.Logic.ApiClient.Responses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -34,16 +35,17 @@ public class ApiClient(
         .AddTimeout(TimeSpan.FromSeconds(10))
         .Build();
 
-    public async Task<ApiClientResponse<T>> SendQueryAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default)
-        where T : NodeResponseObject
+    public async Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default)
     {
         await semaphore.WaitAsync(cancellationToken);
 
         try
         {
+            await Task.Delay(settings.Value.SubsequentCallDelay);
+
             return await resiliencePipeline.ExecuteAsync(async ct =>
             {
-                var response = await graphQlClient.SendQueryAsync<ApiClientResponse<T>>(request, ct);
+                var response = await graphQlClient.SendQueryAsync<T>(request, ct);
                 foreach (var error in response.Errors ?? [])
                     logger.LogError("Failed response from GraphQL API recieved. Message: {Message}", error.Message);
 
@@ -63,6 +65,5 @@ public class ApiClient(
 
 public interface IApiClient
 {
-    Task<ApiClientResponse<T>> SendQueryAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default)
-        where T : NodeResponseObject;
+    Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default);
 }

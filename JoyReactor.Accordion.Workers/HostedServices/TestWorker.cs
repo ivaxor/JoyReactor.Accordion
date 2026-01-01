@@ -16,7 +16,7 @@ public class TestWorker(
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var post = await postClient.GetAsync(6234782, cancellationToken);
-        using var image = await imageDownloader.DownloadAsync(post.Value.Attributes.First(), cancellationToken);
+        using var image = await imageDownloader.DownloadAsync(post.Attributes.First(), cancellationToken);
         var vector = await onnxVectorConverter.Convert(image.Value);
         await vectorDatabaseContext.InsertAsync(vector, cancellationToken);
 

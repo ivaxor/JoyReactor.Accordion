@@ -1,16 +1,27 @@
 ﻿using GraphQL;
 using JoyReactor.Accordion.Logic.ApiClient.Models;
+using JoyReactor.Accordion.Logic.ApiClient.Responses;
+using Microsoft.Extensions.Logging;
+using System.Collections.Frozen;
 using System.Text;
 
 namespace JoyReactor.Accordion.Logic.ApiClient;
 
-public class TagClient(IApiClient apiClient)
+public class TagClient(
+    IApiClient apiClient,
+    ILogger<TagClient> logger)
     : ITagClient
 {
-    public async Task<Tag> GetAsync(int numberId, CancellationToken cancellationToken = default)
+    internal static readonly FrozenDictionary<TagLineType, string> TagLineTypeToValue = new Dictionary<TagLineType, string>()
+    {
+        { TagLineType.NEW, "NEW" },
+        { TagLineType.BEST, "BEST" },
+    }.ToFrozenDictionary();
+
+    public async Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken = default)
     {
         const string query = @"
-query TagClient_GetAsync($nodeId: ID!) {
+query TagClient_GetAsync($nodeId: ID!, $type: TagLineType) {
   node(id: $nodeId) {
     ... on Tag {
       id
@@ -25,7 +36,7 @@ query TagClient_GetAsync($nodeId: ID!) {
         id
         name
       }
-      tagPager(type: NEW) {
+      tagPager(type: $type) {
         count
       }
     }
@@ -33,15 +44,15 @@ query TagClient_GetAsync($nodeId: ID!) {
 }";
 
         var nodeId = Convert.ToBase64String(Encoding.UTF8.GetBytes($"Tag:{numberId}"));
-        var request = new GraphQLRequest(query, new { nodeId });
-        var response = await apiClient.SendQueryAsync<Tag>(request, cancellationToken);
+        var request = new GraphQLRequest(query, new { nodeId, type = TagLineTypeToValue[type] });
+        var response = await apiClient.SendAsync<ApiClientNodeResponse<Tag>>(request, cancellationToken);
         return response.Node;
     }
 
-    public async Task<Tag> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken = default)
     {
         const string query = @"
-query TagClient_GetByNameAsync($name: String!) {
+query TagClient_GetByNameAsync($name: String!, $type: TagLineType) {
   node: tag(name: $name) {
     ... on Tag {
       id
@@ -56,67 +67,66 @@ query TagClient_GetByNameAsync($name: String!) {
         id
         name
       }
-      tagPager(type: NEW) {
+      tagPager(type: $type) {
         count
       }
     }
   }
 }";
 
-        var request = new GraphQLRequest(query, new { name });
-        var response = await apiClient.SendQueryAsync<Tag>(request, cancellationToken);
+        var type = TagLineTypeToValue[lineType];
+        var request = new GraphQLRequest(query, new { name, type });
+        var response = await apiClient.SendAsync<ApiClientNodeResponse<Tag>>(request, cancellationToken);
         return response.Node;
     }
 
-    public async Task<Tag[]> GetSubTagsAsync(int numberId, CancellationToken cancellationToken = default)
+    public async Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken = default)
     {
         const string query = @"
-query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!) {
+query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!, $type: TagLineType!) {
   node(id: $nodeId) {
-    ... on Tag {
-      tagPager(type: NEW) {
-        tags(page: $page) {
-          ... on Tag {
+    ... on TagPager {
+      id
+      count
+      tags(page: $page) {
+        ... on Tag {
+          id
+          name
+          count
+          subscribers
+          mainTag {
             id
             name
+          }
+          tagPager(type: $type) {
             count
-            subscribers
-            mainTag {
-              id
-              name
-            }
-            hierarchy {
-              id
-              name
-            }
-            tagPager(type: NEW) {
-              count
-            }
           }
         }
-        count
       }
     }
   }
 }";
 
-        var nodeId = Convert.ToBase64String(Encoding.UTF8.GetBytes($"Tag:{numberId}"));
+        var type = TagLineTypeToValue[lineType];
+        var nodeId = Convert.ToBase64String(Encoding.UTF8.GetBytes($"TagPager:Category,{parentNumberId},{type}"));
+        var request = new GraphQLRequest(query, new { nodeId, page, type });
+        var response = await apiClient.SendAsync<ApiClientNodeResponse<TagPager>>(request, cancellationToken);
+        return response.Node;
+    }
+
+    public async Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken = default)
+    {
         var page = 0;
-        ApiClientResponse<Tag> response = null;
+        var tagPager = (TagPager)null;
         var subTags = new List<Tag>();
 
         do
         {
             page++;
 
-            var request = new GraphQLRequest(query, new { nodeId, page });
-            response = await apiClient.SendQueryAsync<Tag>(request, cancellationToken);
-            subTags.AddRange(response.Node.Pager.Tags);
-        } while (subTags.Count() < response.Node.Pager.SubTagsTotalCount);
-
-        // Unknown behaivor
-        // TagPager reports coult less then actual summary of pages
-        // Example: VGFnOjEzMTU5Mjg=
+            tagPager = await GetSubTagsAsync(parentNumberId, lineType, page, cancellationToken);
+            subTags.AddRange(tagPager.Tags);
+        } while (subTags.Count() < tagPager.TotalCount);
 
         return subTags.ToArray();
     }
@@ -124,7 +134,8 @@ query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!) {
 
 public interface ITagClient
 {
-    Task<Tag> GetAsync(int numberId, CancellationToken cancellationToken = default);
-    Task<Tag> GetByNameAsync(string name, CancellationToken cancellationToken = default);
-    Task<Tag[]> GetSubTagsAsync(int numberId, CancellationToken cancellationToken = default);
+    Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken = default);
+    Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken = default);
+    Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken = default);
+    Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken = default);
 }

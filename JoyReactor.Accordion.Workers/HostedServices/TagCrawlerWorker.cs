@@ -1,12 +1,12 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient;
 using JoyReactor.Accordion.Logic.ApiClient.Constants;
+using JoyReactor.Accordion.Logic.ApiClient.Models;
 using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace JoyReactor.Accordion.Workers.HostedServices;
 
@@ -14,25 +14,23 @@ public class TagCrawlerWorker : IHostedService
 {
     internal readonly SqlDatabaseContext sqlDatabaseContext;
     internal readonly ITagClient tagClient;
-    internal readonly IOptions<ApiClientSettings> settings;
     internal readonly ILogger<TagCrawlerWorker> logger;
 
     public TagCrawlerWorker(
         IServiceScopeFactory serviceScopeFactory,
         ITagClient tagClient,
-        IOptions<ApiClientSettings> settings,
         ILogger<TagCrawlerWorker> logger)
     {
         var serviceScope = serviceScopeFactory.CreateScope();
         sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
 
         this.tagClient = tagClient;
-        this.settings = settings;
         this.logger = logger;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+
         var existingMainTagNames = await sqlDatabaseContext.ParsedTags
             .Where(tagName => TagConstants.MainCategories.ToArray().Contains(tagName.Name))
             .Select(tag => tag.Name)
@@ -40,31 +38,27 @@ public class TagCrawlerWorker : IHostedService
         var nonExistingMainTagNames = TagConstants.MainCategories
             .Where(tagName => !existingMainTagNames.Contains(tagName))
             .ToArray();
+        logger.LogInformation("Crawling {TagsCount} main category tags", nonExistingMainTagNames.Count());
         foreach (var tagName in nonExistingMainTagNames)
         {
-            logger.LogInformation("Crawling {TagName} main category tag", tagName);
-
+            logger.LogInformation("Crawling \"{TagName}\" main category tag", tagName);
             await Crawl(tagName, cancellationToken);
-            await Task.Delay(settings.Value.SubsequentCallDelay);
         }
 
-        var tagsWithEmptySubTags = await sqlDatabaseContext.ParsedTags
-                .Where(tag => tag.SubTagsCount > 0 && tag.SubTags.Count() < tag.SubTagsCount)
-                .ToArrayAsync(cancellationToken);
-        while (tagsWithEmptySubTags.Length != 0)
+        var tagsWithEmptySubTags = (ParsedTag[])null;
+        do
         {
-            foreach (var parsedTag in tagsWithEmptySubTags)
-            {
-                logger.LogInformation("Crawling {TagName} tag for sub tags", parsedTag.Name);
-
-                await Crawl(parsedTag, cancellationToken);
-                await Task.Delay(settings.Value.SubsequentCallDelay);
-            }
-
             tagsWithEmptySubTags = await sqlDatabaseContext.ParsedTags
                 .Where(tag => tag.SubTagsCount > 0 && tag.SubTags.Count() < tag.SubTagsCount)
                 .ToArrayAsync(cancellationToken);
-        }
+            logger.LogInformation("Crawling {TagsCount} tags for sub tags", tagsWithEmptySubTags.Count());
+
+            foreach (var parsedTag in tagsWithEmptySubTags)
+            {
+                logger.LogInformation("Crawling \"{TagName}\" tag for sub tags", parsedTag.Name);
+                await Crawl(parsedTag, cancellationToken);
+            }
+        } while (tagsWithEmptySubTags.Length != 0);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -74,34 +68,34 @@ public class TagCrawlerWorker : IHostedService
 
     internal async Task Crawl(string tagName, CancellationToken cancellationToken)
     {
-        var tag = await tagClient.GetByNameAsync(tagName, cancellationToken);
+        var tag = await tagClient.GetByNameAsync(tagName, TagLineType.NEW, cancellationToken);
         var parsedTag = new ParsedTag(tag);
 
         await sqlDatabaseContext.ParsedTags.AddAsync(parsedTag, cancellationToken);
         await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
     }
 
-    internal async Task Crawl(ParsedTag parsedTag, CancellationToken cancellationToken)
+    internal async Task Crawl(ParsedTag parentTag, CancellationToken cancellationToken)
     {
-        var subTags = await tagClient.GetSubTagsAsync(parsedTag.NumberId, cancellationToken);
-        var parsedTags = subTags
-            .Select(tag => new ParsedTag(tag))
+        var subTags = await tagClient.GetAllSubTagsAsync(parentTag.NumberId, TagLineType.NEW, cancellationToken);
+        var parsedSubTags = subTags
+            .Select(subTag => new ParsedTag(subTag, parentTag))
             .ToArray();
-        logger.LogInformation("Parsed {SubTagsCount} sub tags in {TagName} tag", parsedTags.Count(), parsedTag.Name);
 
-        var parsedTagIds = parsedTags
-            .Select(tag => tag.Id)
+        var parsedSubTagIds = parsedSubTags
+            .Select(subTag => subTag.Id)
             .ToArray();
         var existingTagIds = await sqlDatabaseContext.ParsedTags
-            .Where(tag => parsedTagIds.Contains(tag.Id))
-            .Select(tag => tag.Id)
+            .Where(subTag => parsedSubTagIds.Contains(subTag.Id))
+            .Select(subTag => subTag.Id)
             .ToHashSetAsync(cancellationToken);
 
-        parsedTags = parsedTags
-            .Where(tag => !existingTagIds.Contains(tag.Id))
+        parsedSubTags = parsedSubTags
+            .Where(subTag => !existingTagIds.Contains(subTag.Id))
             .ToArray();
+        logger.LogInformation("Found {TagsCount} new sub tags in \"{TagName}\" tag", parsedSubTags.Count(), parentTag.Name);
 
-        await sqlDatabaseContext.ParsedTags.AddRangeAsync(parsedTags, cancellationToken);
+        await sqlDatabaseContext.ParsedTags.AddRangeAsync(parsedSubTags, cancellationToken);
         await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
     }
 }

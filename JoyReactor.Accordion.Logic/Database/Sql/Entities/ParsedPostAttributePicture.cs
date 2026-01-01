@@ -8,7 +8,7 @@ public record ParsedPostAttributePicture
     public Guid Id { get; set; }
 
     public int AttributeId { get; set; }
-    public int PictureId { get; set; }
+    public int ImageId { get; set; }
 
     public Guid PostId { get; set; }
     public virtual ParsedPost Post { get; set; }
@@ -25,17 +25,14 @@ public class ParsedPostAttributePictureEntityTypeConfiguration : IEntityTypeConf
     public void Configure(EntityTypeBuilder<ParsedPostAttributePicture> builder)
     {
         builder
-            .HasIndex(e => e.AttributeId)
+            .HasIndex(e => new { e.PostId, e.AttributeId })
             .IsUnique();
         builder
             .Property(e => e.AttributeId)
             .IsRequired(true);
 
         builder
-            .HasIndex(e => e.PictureId)
-            .IsUnique();
-        builder
-            .Property(e => e.PictureId)
+            .Property(e => e.ImageId)
             .IsRequired(true);
 
         builder

@@ -34,6 +34,10 @@ public class ParsedPostAttributeEmbededEntityTypeConfiguration : IEntityTypeConf
     public void Configure(EntityTypeBuilder<ParsedPostAttributeEmbeded> builder)
     {
         builder
+            .HasIndex(e => new { e.PostId, e.BandCampId, e.CoubId, e.SoundCloudId, e.VimeoId, e.YouTubeId })
+            .IsUnique();
+
+        builder
             .HasOne(e => e.Post)
             .WithMany(e => e.AttributeEmbeds)
             .HasPrincipalKey(e => e.Id)

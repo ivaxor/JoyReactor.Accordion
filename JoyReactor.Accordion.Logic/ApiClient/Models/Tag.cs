@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Responses;
+using System.Text.Json.Serialization;
 
 namespace JoyReactor.Accordion.Logic.ApiClient.Models;
 
@@ -21,13 +22,4 @@ public record Tag : NodeResponseObject
 
     [JsonPropertyName("tagPager")]
     public TagPager? Pager { get; set; }
-}
-
-public record TagPager : NodeResponseObject
-{
-    [JsonPropertyName("tags")]
-    public Tag[]? Tags { get; set; }
-
-    [JsonPropertyName("count")]
-    public int? SubTagsTotalCount { get; set; }
 }

@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
 
-namespace JoyReactor.Accordion.Logic.ApiClient;
+namespace JoyReactor.Accordion.Logic.ApiClient.Responses;
 
-public record ApiClientResponse<T>
+public record ApiClientNodeResponse<T>
     where T : INodeResponseObject
 {
     [JsonPropertyName("node")]

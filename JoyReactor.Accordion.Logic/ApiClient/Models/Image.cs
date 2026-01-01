@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Responses;
+using System.Text.Json.Serialization;
 
 namespace JoyReactor.Accordion.Logic.ApiClient.Models;
 
@@ -11,7 +12,4 @@ public record Image : NodeResponseObject
     /// </summary>
     [JsonPropertyName("type")]
     public string? Type { get; set; }
-
-    [JsonPropertyName("hasVideo")]
-    public bool? HasVideo { get; set; }
 }

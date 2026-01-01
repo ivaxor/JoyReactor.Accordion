@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Responses;
+using System.Text.Json.Serialization;
 
 namespace JoyReactor.Accordion.Logic.ApiClient.Models;
 
