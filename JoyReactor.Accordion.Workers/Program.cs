@@ -40,6 +40,7 @@ builder.Services.AddDbContext<SqlDatabaseContext>((serviceProvider, options) =>
     var settings = serviceProvider.GetRequiredService<IOptions<PostgreSqlSettings>>();
     options.UseNpgsql(settings.Value.ConnectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName));
 });
+builder.Services.AddScoped(typeof(ISqlDatabaseRepository<>), typeof(SqlDatabaseRepository<>));
 
 builder.Services.AddSingleton<IQdrantClient, QdrantClient>(serviceProvider =>
 {
@@ -97,7 +98,9 @@ builder.Services.AddSingleton<IOnnxVectorConverter, OnnxVectorConverter>();
 builder.Services.AddSingleton<IVectorDatabaseContext, VectorDatabaseContext>();
 
 // builder.Services.AddHostedService<TestWorker>();
-builder.Services.AddHostedService<TagCrawlerWorker>();
+builder.Services.AddHostedService<TopWeekPostsCrawlerWorker>();
+builder.Services.AddHostedService<MainTagsWorker>();
+builder.Services.AddHostedService<SubTagsWorker>();
 
 var host = builder.Build();
 

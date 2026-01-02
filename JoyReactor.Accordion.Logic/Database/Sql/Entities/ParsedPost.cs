@@ -1,17 +1,30 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
+using JoyReactor.Accordion.Logic.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record ParsedPost
+public record ParsedPost : ISqlEntity
 {
+    public ParsedPost() { }
+
+    public ParsedPost(Post post)
+    {
+        Id = post.NumberId.ToGuid();
+        NumberId = post.NumberId;
+        ContentVersion = post.ContentVersion.Value;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public Guid Id { get; set; }
 
     public int NumberId { get; set; }
     public int ContentVersion { get; set; }
 
-    public virtual ParsedPostAttributePicture[] AttributePictures { get; set; }
-    public virtual ParsedPostAttributeEmbeded[] AttributeEmbeds { get; set; }
+    public virtual IEnumerable<ParsedPostAttributePicture>? AttributePictures { get; set; }
+    public virtual IEnumerable<ParsedPostAttributeEmbeded>? AttributeEmbeds { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

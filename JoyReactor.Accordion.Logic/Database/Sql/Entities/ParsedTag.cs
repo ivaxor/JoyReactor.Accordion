@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record ParsedTag
+public record ParsedTag : ISqlEntity
 {
     public ParsedTag() { }
 

@@ -1,10 +1,44 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
+using JoyReactor.Accordion.Logic.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record ParsedPostAttributeEmbeded
+public record ParsedPostAttributeEmbeded : ISqlEntity, IParsedPostAttribute
 {
+    public ParsedPostAttributeEmbeded() { }
+
+    public ParsedPostAttributeEmbeded(PostAttribute attribute, ParsedPost post, IParsedAttributeEmbeded parsedAttribute)
+    {
+        Id = attribute.NumberId.ToGuid();
+        PostId = post.Id;
+
+        switch (attribute.Type)
+        {
+            case "BANDCAMP":
+                BandCampId = parsedAttribute.Id;
+                break;
+            case "COUB":
+                CoubId = parsedAttribute.Id;
+                break;
+            case "SOUNDCLOUD":
+                SoundCloudId = parsedAttribute.Id;
+                break;
+            case "VIMEO":
+                VimeoId = parsedAttribute.Id;
+                break;
+            case "YOUTUBE":
+                YouTubeId = parsedAttribute.Id;
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public Guid Id { get; set; }
 
     public Guid PostId { get; set; }

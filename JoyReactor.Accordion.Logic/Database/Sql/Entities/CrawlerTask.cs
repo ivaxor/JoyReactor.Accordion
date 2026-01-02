@@ -1,6 +1,6 @@
 ﻿namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record CrawlerTask
+public record CrawlerTask : ISqlEntity
 {
     public Guid Id { get; set; }
 

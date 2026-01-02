@@ -1,15 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record ParsedYoutube
+public record ParsedYoutube : ISqlEntity, IParsedAttributeEmbeded
 {
+    public ParsedYoutube() { }
+
+    public ParsedYoutube(PostAttribute attribute)
+    {
+        Id = Guid.NewGuid();
+        VideoId = attribute.Value;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public Guid Id { get; set; }
 
     public string VideoId { get; set; }
 
-    public Guid PostAttributeEmbededId { get; set; }
     public virtual ParsedPostAttributeEmbeded PostAttributeEmbeded { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -30,7 +40,7 @@ public class ParsedYoutubeEntityTypeConfiguration : IEntityTypeConfiguration<Par
         builder
             .HasOne(e => e.PostAttributeEmbeded)
             .WithOne(e => e.YouTube)
-            .HasPrincipalKey<ParsedYoutube>(e => e.PostAttributeEmbededId)
+            .HasPrincipalKey<ParsedYoutube>(e => e.Id)
             .HasForeignKey<ParsedPostAttributeEmbeded>(e => e.YouTubeId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);

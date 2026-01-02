@@ -1,15 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JoyReactor.Accordion.Logic.Database.Sql.Entities;
 
-public record ParsedBandCamp
+public record ParsedBandCamp : ISqlEntity, IParsedAttributeEmbeded
 {
+    public ParsedBandCamp() { }
+
+    public ParsedBandCamp(PostAttribute attribute)
+    {
+        Id = Guid.NewGuid();
+        AlbumId = attribute.Value;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public Guid Id { get; set; }
 
     public string AlbumId { get; set; }
 
-    public Guid PostAttributeEmbededId { get; set; }
     public virtual ParsedPostAttributeEmbeded PostAttributeEmbeded { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -30,7 +40,7 @@ public class ParsedBandCampEntityTypeConfiguration : IEntityTypeConfiguration<Pa
         builder
             .HasOne(e => e.PostAttributeEmbeded)
             .WithOne(e => e.BandCamp)
-            .HasPrincipalKey<ParsedBandCamp>(e => e.PostAttributeEmbededId)
+            .HasPrincipalKey<ParsedBandCamp>(e => e.Id)
             .HasForeignKey<ParsedPostAttributeEmbeded>(e => e.BandCampId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);

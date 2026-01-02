@@ -1,5 +1,4 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient;
-using JoyReactor.Accordion.Logic.ApiClient.Constants;
 using JoyReactor.Accordion.Logic.ApiClient.Models;
 using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
@@ -10,44 +9,22 @@ using Microsoft.Extensions.Logging;
 
 namespace JoyReactor.Accordion.Workers.HostedServices;
 
-public class TagCrawlerWorker : IHostedService
+public class SubTagsWorker(
+    IServiceScopeFactory serviceScopeFactory,
+    ITagClient tagClient,
+    ILogger<SubTagsWorker> logger)
+    : IHostedService
 {
-    internal readonly SqlDatabaseContext sqlDatabaseContext;
-    internal readonly ITagClient tagClient;
-    internal readonly ILogger<TagCrawlerWorker> logger;
-
-    public TagCrawlerWorker(
-        IServiceScopeFactory serviceScopeFactory,
-        ITagClient tagClient,
-        ILogger<TagCrawlerWorker> logger)
-    {
-        var serviceScope = serviceScopeFactory.CreateScope();
-        sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
-
-        this.tagClient = tagClient;
-        this.logger = logger;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-
-        var existingMainTagNames = await sqlDatabaseContext.ParsedTags
-            .Where(tagName => TagConstants.MainCategories.ToArray().Contains(tagName.Name))
-            .Select(tag => tag.Name)
-            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
-        var nonExistingMainTagNames = TagConstants.MainCategories
-            .Where(tagName => !existingMainTagNames.Contains(tagName))
-            .ToArray();
-        logger.LogInformation("Crawling {TagsCount} main category tags", nonExistingMainTagNames.Count());
-        foreach (var tagName in nonExistingMainTagNames)
-        {
-            logger.LogInformation("Crawling \"{TagName}\" main category tag", tagName);
-            await Crawl(tagName, cancellationToken);
-        }
-
+        var periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         var tagsWithEmptySubTags = (ParsedTag[])null;
+
         do
         {
+            using var serviceScope = serviceScopeFactory.CreateScope();
+            using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+
             tagsWithEmptySubTags = await sqlDatabaseContext.ParsedTags
                 .Where(tag => tag.SubTagsCount > 0 && tag.SubTags.Count() < tag.SubTagsCount)
                 .ToArrayAsync(cancellationToken);
@@ -56,9 +33,9 @@ public class TagCrawlerWorker : IHostedService
             foreach (var parsedTag in tagsWithEmptySubTags)
             {
                 logger.LogInformation("Crawling \"{TagName}\" tag for sub tags", parsedTag.Name);
-                await Crawl(parsedTag, cancellationToken);
+                await Crawl(sqlDatabaseContext, parsedTag, cancellationToken);
             }
-        } while (tagsWithEmptySubTags.Length != 0);
+        } while (await periodicTimer.WaitForNextTickAsync(cancellationToken));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -66,16 +43,7 @@ public class TagCrawlerWorker : IHostedService
         return Task.CompletedTask;
     }
 
-    internal async Task Crawl(string tagName, CancellationToken cancellationToken)
-    {
-        var tag = await tagClient.GetByNameAsync(tagName, TagLineType.NEW, cancellationToken);
-        var parsedTag = new ParsedTag(tag);
-
-        await sqlDatabaseContext.ParsedTags.AddAsync(parsedTag, cancellationToken);
-        await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
-    }
-
-    internal async Task Crawl(ParsedTag parentTag, CancellationToken cancellationToken)
+    internal async Task Crawl(SqlDatabaseContext sqlDatabaseContext, ParsedTag parentTag, CancellationToken cancellationToken)
     {
         var subTags = await tagClient.GetAllSubTagsAsync(parentTag.NumberId, TagLineType.NEW, cancellationToken);
         var parsedSubTags = subTags

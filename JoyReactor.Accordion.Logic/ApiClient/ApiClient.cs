@@ -1,6 +1,5 @@
 ﻿using GraphQL;
 using GraphQL.Client.Abstractions;
-using JoyReactor.Accordion.Logic.ApiClient.Responses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
