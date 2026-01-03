@@ -6,7 +6,9 @@ using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Media.Images;
 using JoyReactor.Accordion.Logic.Onnx;
+using JoyReactor.Accordion.Logic.Parsers;
 using JoyReactor.Accordion.Workers.BackgroudServices;
+using JoyReactor.Accordion.Workers.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +40,14 @@ builder.Services.AddSingleton<IGraphQLClient, GraphQLHttpClient>(serviceProvider
 builder.Services.AddDbContext<SqlDatabaseContext>((serviceProvider, options) =>
 {
     var settings = serviceProvider.GetRequiredService<IOptions<PostgreSqlSettings>>();
-    options.UseNpgsql(settings.Value.ConnectionString, npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName));
+    options.UseNpgsql(settings.Value.ConnectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
+    });
+
+#if DEBUG
+    options.EnableSensitiveDataLogging();
+#endif
 });
 
 builder.Services.AddSingleton<IQdrantClient, QdrantClient>(serviceProvider =>
@@ -91,19 +100,22 @@ builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddSingleton<ITagClient, TagClient>();
 builder.Services.AddSingleton<IPostClient, PostClient>();
 
+builder.Services.AddScoped<IPostParser, PostParser>();
+
 builder.Services.AddSingleton<IImageDownloader, ImageDownloader>();
-builder.Services.AddHttpClient<IImageDownloader>(httpClient =>
+builder.Services.AddHttpClient<IImageDownloader, ImageDownloader>(httpClient =>
 {
     httpClient.DefaultRequestHeaders.Add("Referer", "https://joyreactor.cc");
+    httpClient.Timeout = TimeSpan.FromSeconds(10);
 });
 
 builder.Services.AddSingleton<IOnnxVectorConverter, OnnxVectorConverter>();
 builder.Services.AddSingleton<IVectorDatabaseContext, VectorDatabaseContext>();
 
-builder.Services.AddHostedService<MainTagsCrawler>();
-builder.Services.AddHostedService<EmptySubTagsCrawler>();
-builder.Services.AddHostedService<TopWeekPostsCrawler>();
-//builder.Services.AddHostedService<UnprocessedPictureVectorWorker>();
+builder.Services.AddScopedHostedService<MainTagsCrawler>();
+builder.Services.AddScopedHostedService<EmptySubTagsCrawler>();
+//builder.Services.AddScopedHostedService<TopWeekPostsCrawler>();
+builder.Services.AddScopedHostedService<UnprocessedPictureVectorCrawler>();
 
 var host = builder.Build();
 

@@ -5,6 +5,16 @@ namespace JoyReactor.Accordion.Logic.Extensions;
 
 public static class DbSetExtensions
 {
+    public static async Task AddIgnoreExistingAsync<TEntity>(this DbSet<TEntity> dbSet, TEntity entity, CancellationToken cancellationToken)
+        where TEntity : class, ISqlEntity
+    {
+        var isEntityExists = await dbSet.AnyAsync(e => e.Id == entity.Id, cancellationToken);
+        if (isEntityExists)
+            return;
+
+        await dbSet.AddAsync(entity, cancellationToken);
+    }
+
     public static async Task AddRangeIgnoreExistingAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities, CancellationToken cancellationToken)
         where TEntity : class, ISqlEntity
     {

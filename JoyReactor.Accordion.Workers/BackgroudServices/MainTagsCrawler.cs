@@ -5,7 +5,6 @@ using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace JoyReactor.Accordion.Workers.BackgroudServices;
@@ -14,7 +13,7 @@ public class MainTagsCrawler(
     IServiceScopeFactory serviceScopeFactory,
     ITagClient tagClient,
     ILogger<MainTagsCrawler> logger)
-    : BackgroundService
+    : ScopedBackgroudService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -29,6 +28,10 @@ public class MainTagsCrawler(
             .Where(tagName => !existingMainTagNames.Contains(tagName))
             .ToArray();
         logger.LogInformation("Crawling {TagsCount} main category tags", nonExistingMainTagNames.Count());
+
+        if (nonExistingMainTagNames.Length == 0)
+            return;
+
         foreach (var tagName in nonExistingMainTagNames)
         {
             logger.LogInformation("Crawling \"{TagName}\" main category tag", tagName);

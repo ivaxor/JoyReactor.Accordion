@@ -15,7 +15,7 @@ public class ImageDownloader(
     internal static readonly ParsedPostAttributePictureType[] ImageTypes = [
         ParsedPostAttributePictureType.PNG,
         ParsedPostAttributePictureType.JPEG,
-        ParsedPostAttributePictureType.PNG,
+        ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
     ];
     internal static readonly FrozenDictionary<ParsedPostAttributePictureType, string> ImageTypeToExtensions = ImageTypes
@@ -31,8 +31,10 @@ public class ImageDownloader(
 
     public async Task<Image<Rgb24>> DownloadAsync(ParsedPostAttributePicture picture, CancellationToken cancellationToken)
     {
-        var path = $"/pics/post/picture-{picture.AttributeId}.{ImageTypeToExtensions[picture.ImageType]}";
+        if (!ImageTypes.Contains(picture.ImageType))
+            throw new ArgumentOutOfRangeException(nameof(picture), "Unsupported picture type");
 
+        var path = $"pics/post/picture-{picture.AttributeId}.{ImageTypeToExtensions[picture.ImageType]}";
         foreach (var cdnDomainName in settings.Value.CdnDomainNames)
         {
             var url = $"{cdnDomainName}/{path}";

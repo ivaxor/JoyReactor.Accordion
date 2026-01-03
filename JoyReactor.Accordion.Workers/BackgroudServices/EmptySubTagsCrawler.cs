@@ -4,36 +4,16 @@ using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using JoyReactor.Accordion.Logic.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace JoyReactor.Accordion.Workers.BackgroudServices;
 
-public class EmptySubTagsCrawler : BackgroundService, IDisposable
+public class EmptySubTagsCrawler(
+    SqlDatabaseContext sqlDatabaseContext,
+    ITagClient tagClient,
+    ILogger<EmptySubTagsCrawler> logger)
+    : ScopedBackgroudService
 {
-    internal readonly ITagClient tagClient;
-    internal readonly ILogger<EmptySubTagsCrawler> logger;
-    internal readonly IServiceScope serviceScope;
-    internal readonly SqlDatabaseContext sqlDatabaseContext;
-
-    public EmptySubTagsCrawler(
-        IServiceScopeFactory serviceScopeFactory,
-        ITagClient tagClient,
-        ILogger<EmptySubTagsCrawler> logger)
-    {
-        this.tagClient = tagClient;
-        this.logger = logger;
-
-        serviceScope = serviceScopeFactory.CreateScope();
-        sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
-    }
-
-    public void Dispose()
-    {
-        serviceScope.Dispose();
-    }
-
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(15));
@@ -43,8 +23,13 @@ public class EmptySubTagsCrawler : BackgroundService, IDisposable
         {
             tagsWithEmptySubTags = await sqlDatabaseContext.ParsedTags
                 .Where(tag => tag.SubTagsCount > 0 && tag.SubTags.Count() < tag.SubTagsCount)
+                .OrderByDescending(tag => tag.Id)
+                .Take(100)
                 .ToArrayAsync(cancellationToken);
             logger.LogInformation("Crawling {TagsCount} tags for sub tags", tagsWithEmptySubTags.Count());
+
+            if (tagsWithEmptySubTags.Length == 0)
+                return;
 
             foreach (var parsedTag in tagsWithEmptySubTags)
             {
