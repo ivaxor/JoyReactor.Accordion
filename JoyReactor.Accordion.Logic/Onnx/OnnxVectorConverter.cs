@@ -14,7 +14,7 @@ public class OnnxVectorConverter(
     internal static readonly float[] Mean = [0.48145466f, 0.4578275f, 0.40821073f];
     internal static readonly float[] Std = [0.26862954f, 0.26130258f, 0.27577711f];
 
-    public async Task<float[]> Convert(Image<Rgb24> image)
+    public async Task<float[]> ConvertAsync(Image<Rgb24> image)
     {
         var inputSize = settings.Value.InputSize;
         var outputSize = settings.Value.OutputSize;
@@ -82,5 +82,5 @@ public class OnnxVectorConverter(
 
 public interface IOnnxVectorConverter
 {
-    Task<float[]> Convert(Image<Rgb24> image);
+    Task<float[]> ConvertAsync(Image<Rgb24> image);
 }

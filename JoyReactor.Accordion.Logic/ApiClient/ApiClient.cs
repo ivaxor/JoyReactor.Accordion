@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
+using Polly.Timeout;
 
 namespace JoyReactor.Accordion.Logic.ApiClient;
 
@@ -19,6 +20,7 @@ public class ApiClient(
         .AddRetry(new RetryStrategyOptions
         {
             ShouldHandle = new PredicateBuilder()
+                .Handle<TimeoutRejectedException>()
                 .Handle<HttpRequestException>()
                 .Handle<GraphQL.Client.Http.GraphQLHttpRequestException>(),
             MaxRetryAttempts = settings.Value.MaxRetryAttempts,
@@ -34,7 +36,7 @@ public class ApiClient(
         .AddTimeout(TimeSpan.FromSeconds(10))
         .Build();
 
-    public async Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default)
+    public async Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken)
     {
         await semaphore.WaitAsync(cancellationToken);
 
@@ -64,5 +66,5 @@ public class ApiClient(
 
 public interface IApiClient
 {
-    Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken = default);
+    Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken);
 }

@@ -8,15 +8,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace JoyReactor.Accordion.Workers.HostedServices;
+namespace JoyReactor.Accordion.Workers.BackgroudServices;
 
-public class MainTagsWorker(
+public class MainTagsCrawler(
     IServiceScopeFactory serviceScopeFactory,
     ITagClient tagClient,
-    ILogger<MainTagsWorker> logger)
-    : IHostedService
+    ILogger<MainTagsCrawler> logger)
+    : BackgroundService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         using var serviceScope = serviceScopeFactory.CreateScope();
         using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
@@ -32,16 +32,11 @@ public class MainTagsWorker(
         foreach (var tagName in nonExistingMainTagNames)
         {
             logger.LogInformation("Crawling \"{TagName}\" main category tag", tagName);
-            await Crawl(sqlDatabaseContext, tagName, cancellationToken);
+            await CrawlAsync(sqlDatabaseContext, tagName, cancellationToken);
         }
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    internal async Task Crawl(SqlDatabaseContext sqlDatabaseContext, string tagName, CancellationToken cancellationToken)
+    internal async Task CrawlAsync(SqlDatabaseContext sqlDatabaseContext, string tagName, CancellationToken cancellationToken)
     {
         var tag = await tagClient.GetByNameAsync(tagName, TagLineType.NEW, cancellationToken);
         var parsedTag = new ParsedTag(tag);

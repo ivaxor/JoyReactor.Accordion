@@ -13,14 +13,14 @@ public record ImagePayload
             ? postIdsValue.ListValue.Values.Select(v => v.StringValue).ToHashSet(StringComparer.Ordinal)
             : [];
 
-        ImageIds = scoredPoint.Payload.TryGetValue("imageIds", out var imageIdsValue) && imageIdsValue.KindCase == Value.KindOneofCase.ListValue
-            ? imageIdsValue.ListValue.Values.Select(v => v.StringValue).ToHashSet(StringComparer.Ordinal)
+        AttributeIds = scoredPoint.Payload.TryGetValue("attributeIds", out var attributeIdsValue) && attributeIdsValue.KindCase == Value.KindOneofCase.ListValue
+            ? attributeIdsValue.ListValue.Values.Select(v => v.StringValue).ToHashSet(StringComparer.Ordinal)
             : [];
     }
 
     [JsonPropertyName("postIds")]
     public HashSet<string> PostIds { get; set; }
 
-    [JsonPropertyName("imageIds")]
-    public HashSet<string> ImageIds { get; set; }
+    [JsonPropertyName("attributeIds")]
+    public HashSet<string> AttributeIds { get; set; }
 }

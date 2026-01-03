@@ -16,7 +16,7 @@ public class PostClient(IApiClient apiClient)
         { PostLineType.NEW, 5 },
     }.ToFrozenDictionary();
 
-    public async Task<Post> GetAsync(int numberId, CancellationToken cancellationToken = default)
+    public async Task<Post> GetAsync(int numberId, CancellationToken cancellationToken)
     {
         const string query = @"
 query PostClient_GetAsync($nodeId: ID!) {
@@ -47,7 +47,7 @@ query PostClient_GetAsync($nodeId: ID!) {
         return response.Node;
     }
 
-    public async Task<PostPager> GetByTagAsync(int tagNumberId, PostLineType lineType, int page, CancellationToken cancellationToken = default)
+    public async Task<PostPager> GetByTagAsync(int tagNumberId, PostLineType lineType, int page, CancellationToken cancellationToken)
     {
         const string query = @"
 query PostClient_GetByTagAsync($nodeId: ID!, $page: Int) {
@@ -85,7 +85,7 @@ query PostClient_GetByTagAsync($nodeId: ID!, $page: Int) {
         return response.Node;
     }
 
-    public async Task<Post[]> GetWeekTopPostsAsync(int year, int week, bool nsfw, CancellationToken cancellationToken = default)
+    public async Task<Post[]> GetWeekTopPostsAsync(int year, int week, bool nsfw, CancellationToken cancellationToken)
     {
         const string query = @"
 query PostClient_GetWeekTopPostsAsync($year:Int!, $week: Int!, $nsfw: Boolean!) {
@@ -103,6 +103,7 @@ query PostClient_GetWeekTopPostsAsync($year:Int!, $week: Int!, $nsfw: Boolean!) 
               }
             }
             ... on PostAttributeEmbed {
+              id
               value
             }
           }
@@ -118,7 +119,7 @@ query PostClient_GetWeekTopPostsAsync($year:Int!, $week: Int!, $nsfw: Boolean!) 
 
 public interface IPostClient
 {
-    Task<Post> GetAsync(int numberId, CancellationToken cancellationToken = default);
-    Task<PostPager> GetByTagAsync(int tagNumberId, PostLineType type, int page, CancellationToken cancellationToken = default);
-    Task<Post[]> GetWeekTopPostsAsync(int year, int week, bool nsfw, CancellationToken cancellationToken = default);
+    Task<Post> GetAsync(int numberId, CancellationToken cancellationToken);
+    Task<PostPager> GetByTagAsync(int tagNumberId, PostLineType type, int page, CancellationToken cancellationToken);
+    Task<Post[]> GetWeekTopPostsAsync(int year, int week, bool nsfw, CancellationToken cancellationToken);
 }

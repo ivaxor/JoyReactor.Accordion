@@ -13,7 +13,17 @@ public record ParsedPostAttributePicture : ISqlEntity, IParsedPostAttribute
     {
         Id = attribute.NumberId.ToGuid();
         AttributeId = attribute.NumberId;
-        ImageId = attribute.Image.NumberId;
+        ImageType = attribute.Image.Type switch
+        {
+            "PNG" => ParsedPostAttributePictureType.PNG,
+            "JPEG" => ParsedPostAttributePictureType.JPEG,
+            "GIF" => ParsedPostAttributePictureType.GIF,
+            "BMP" => ParsedPostAttributePictureType.BMP,
+            "TIFF" => ParsedPostAttributePictureType.TIFF,
+            "MP4" => ParsedPostAttributePictureType.MP4,
+            "WEBM" => ParsedPostAttributePictureType.WEBM,
+            _ => throw new NotImplementedException(),
+        };
         PostId = post.Id;
         IsVectorCreated = false;
         CreatedAt = DateTime.UtcNow;
@@ -23,16 +33,26 @@ public record ParsedPostAttributePicture : ISqlEntity, IParsedPostAttribute
     public Guid Id { get; set; }
 
     public int AttributeId { get; set; }
-    public int ImageId { get; set; }
+    public ParsedPostAttributePictureType ImageType { get; set; }
 
     public Guid PostId { get; set; }
     public virtual ParsedPost Post { get; set; }
 
     public bool IsVectorCreated { get; set; }
-    public DateTime? VectorLastUpdatedAt { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public enum ParsedPostAttributePictureType
+{
+    PNG,
+    JPEG,
+    GIF,
+    BMP,
+    TIFF,
+    MP4,
+    WEBM,
 }
 
 public class ParsedPostAttributePictureEntityTypeConfiguration : IEntityTypeConfiguration<ParsedPostAttributePicture>
@@ -44,10 +64,6 @@ public class ParsedPostAttributePictureEntityTypeConfiguration : IEntityTypeConf
             .IsUnique();
         builder
             .Property(e => e.AttributeId)
-            .IsRequired(true);
-
-        builder
-            .Property(e => e.ImageId)
             .IsRequired(true);
 
         builder

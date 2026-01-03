@@ -18,7 +18,7 @@ public class TagClient(
         { TagLineType.BEST, "BEST" },
     }.ToFrozenDictionary();
 
-    public async Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken = default)
+    public async Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken)
     {
         const string query = @"
 query TagClient_GetAsync($nodeId: ID!, $type: TagLineType) {
@@ -49,7 +49,7 @@ query TagClient_GetAsync($nodeId: ID!, $type: TagLineType) {
         return response.Node;
     }
 
-    public async Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken = default)
+    public async Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken)
     {
         const string query = @"
 query TagClient_GetByNameAsync($name: String!, $type: TagLineType) {
@@ -80,7 +80,7 @@ query TagClient_GetByNameAsync($name: String!, $type: TagLineType) {
         return response.Node;
     }
 
-    public async Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken = default)
+    public async Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken)
     {
         const string query = @"
 query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!, $type: TagLineType!) {
@@ -114,7 +114,7 @@ query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!, $type: TagLineType!) 
         return response.Node;
     }
 
-    public async Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken = default)
+    public async Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken)
     {
         var page = 0;
         var tagPager = (TagPager)null;
@@ -134,8 +134,8 @@ query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!, $type: TagLineType!) 
 
 public interface ITagClient
 {
-    Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken = default);
-    Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken = default);
-    Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken = default);
-    Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken = default);
+    Task<Tag> GetAsync(int numberId, TagLineType type, CancellationToken cancellationToken);
+    Task<Tag> GetByNameAsync(string name, TagLineType lineType, CancellationToken cancellationToken);
+    Task<TagPager> GetSubTagsAsync(int parentNumberId, TagLineType lineType, int page, CancellationToken cancellationToken);
+    Task<Tag[]> GetAllSubTagsAsync(int parentNumberId, TagLineType lineType, CancellationToken cancellationToken);
 }

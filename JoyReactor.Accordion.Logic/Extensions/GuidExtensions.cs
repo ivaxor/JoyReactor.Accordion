@@ -8,4 +8,10 @@ public static class GuidExtensions
         BitConverter.GetBytes(value).CopyTo(bytes, 0);
         return new Guid(bytes);
     }
+
+    public static int ToInt(this Guid value)
+    {
+        var bytes = value.ToByteArray();
+        return BitConverter.ToInt32(bytes, 0);
+    }
 }

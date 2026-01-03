@@ -1,4 +1,6 @@
-﻿using JoyReactor.Accordion.Logic.Database.Vector.Entities;
+﻿using JoyReactor.Accordion.Logic.Database.Sql.Entities;
+using JoyReactor.Accordion.Logic.Database.Vector.Entities;
+using JoyReactor.Accordion.Logic.Extensions;
 using Microsoft.Extensions.Options;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
@@ -10,15 +12,15 @@ public class VectorDatabaseContext(
     IOptions<QdrantSettings> settings)
     : IVectorDatabaseContext
 {
-    public async Task InsertAsync(float[] vector, CancellationToken cancellationToken = default)
+    public async Task InsertAsync(ParsedPostAttributePicture picture, float[] vector, CancellationToken cancellationToken)
     {
         var point = new PointStruct
         {
             Id = Guid.NewGuid(),
             Vectors = vector,
             Payload = {
-                ["postIds"] = new string [] { },
-                ["immageIds"] = new string [] { },
+                ["postIds"] = new string [] { picture.PostId.ToInt().ToString() },
+                ["attributeIds"] = new string [] { picture.AttributeId.ToString() },
             },
         };
 
@@ -28,7 +30,7 @@ public class VectorDatabaseContext(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<ImagePayload[]> SearchAsync(float[] vector, CancellationToken cancellationToken = default)
+    public async Task<ImagePayload[]> SearchAsync(float[] vector, CancellationToken cancellationToken)
     {
         var results = await qdrantClient.SearchAsync(
             settings.Value.CollectionName,
@@ -45,6 +47,6 @@ public class VectorDatabaseContext(
 
 public interface IVectorDatabaseContext
 {
-    Task InsertAsync(float[] vector, CancellationToken cancellationToken = default);
-    Task<ImagePayload[]> SearchAsync(float[] vector, CancellationToken cancellationToken = default);
+    Task InsertAsync(ParsedPostAttributePicture picture, float[] vector, CancellationToken cancellationToken);
+    Task<ImagePayload[]> SearchAsync(float[] vector, CancellationToken cancellationToken);
 }

@@ -1,38 +1,53 @@
-﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
+﻿using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using System.Collections.Frozen;
 
 namespace JoyReactor.Accordion.Logic.Media.Images;
 
 public class ImageDownloader(
     HttpClient httpClient,
-    IImageReducer imageReducer,
     IOptions<ImageSettings> settings)
     : IImageDownloader
 {
-    public Task<ImageDownloaderResult> DownloadAsync(PostAttribute postAttribute, CancellationToken cancellationToken = default)
-    {
-        return postAttribute.Type switch
-        {
-            "PICTURE" => DownloadAsync($"pics/post/picture-{postAttribute.NumberId}.{postAttribute.Image!.Type}", cancellationToken),
-            _ => Task.FromResult(ImageDownloaderResult.Fail("Invalid type"))
-        };
-    }
+    internal static readonly ParsedPostAttributePictureType[] ImageTypes = [
+        ParsedPostAttributePictureType.PNG,
+        ParsedPostAttributePictureType.JPEG,
+        ParsedPostAttributePictureType.PNG,
+        ParsedPostAttributePictureType.TIFF,
+    ];
+    internal static readonly FrozenDictionary<ParsedPostAttributePictureType, string> ImageTypeToExtensions = ImageTypes
+        .ToDictionary(type => type, type => Enum.GetName(type).ToLowerInvariant())
+        .ToFrozenDictionary();
 
-    internal async Task<ImageDownloaderResult> DownloadAsync(string path, CancellationToken cancellationToken = default)
+    internal readonly ResizeOptions ResizeOptions = new()
     {
+        Size = new Size(settings.Value.ResizedSize, settings.Value.ResizedSize),
+        Mode = ResizeMode.Pad,
+        Sampler = KnownResamplers.Lanczos3,
+    };
+
+    public async Task<Image<Rgb24>> DownloadAsync(ParsedPostAttributePicture picture, CancellationToken cancellationToken)
+    {
+        var path = $"/pics/post/picture-{picture.AttributeId}.{ImageTypeToExtensions[picture.ImageType]}";
+
         foreach (var cdnDomainName in settings.Value.CdnDomainNames)
         {
             var url = $"{cdnDomainName}/{path}";
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("Referer", "https://joyreactor.cc");
 
             using var response = await httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 continue;
 
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            var image = await imageReducer.ReduceAsync(stream, cancellationToken);
-            return ImageDownloaderResult.Success(image);
+
+            var image = await Image.LoadAsync<Rgb24>(stream, cancellationToken);
+            image.Mutate(x => x.Resize(ResizeOptions));
+
+            return image;
         }
 
         throw new NotImplementedException();
@@ -41,5 +56,5 @@ public class ImageDownloader(
 
 public interface IImageDownloader
 {
-    Task<ImageDownloaderResult> DownloadAsync(PostAttribute postAttribute, CancellationToken cancellationToken = default);
+    Task<Image<Rgb24>> DownloadAsync(ParsedPostAttributePicture picture, CancellationToken cancellationToken);
 }
