@@ -98,6 +98,10 @@ query TagClient_GetSubTagsAsync($nodeId: ID!, $page: Int!, $type: TagLineType!) 
             id
             name
           }
+          hierarchy {
+            id
+            name
+          }
           tagPager(type: $type) {
             count
           }

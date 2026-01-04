@@ -18,6 +18,8 @@ public class PicturesWithoutVectorCrawler(
     ILogger<PicturesWithoutVectorCrawler> logger)
     : ScopedBackgroudService
 {
+    internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
+
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var imageTypes = new ParsedPostAttributePictureType[] {
@@ -28,9 +30,7 @@ public class PicturesWithoutVectorCrawler(
         };
         var imageTypeToExtensions = imageTypes.ToDictionary(type => type, type => Enum.GetName(type)!).ToFrozenDictionary();
 
-        var periodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
         var unprocessedPictures = (ParsedPostAttributePicture[])null;
-
         do
         {
             unprocessedPictures = await sqlDatabaseContext.ParsedPostAttributePictures
@@ -68,6 +68,6 @@ public class PicturesWithoutVectorCrawler(
             await vectorDatabaseContext.UpsertAsync(pictureVectors, cancellationToken);
             sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(unprocessedPictures);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
-        } while (unprocessedPictures.Length != 0 || await periodicTimer.WaitForNextTickAsync(cancellationToken));
+        } while (unprocessedPictures.Length != 0 || await PeriodicTimer.WaitForNextTickAsync(cancellationToken));
     }
 }

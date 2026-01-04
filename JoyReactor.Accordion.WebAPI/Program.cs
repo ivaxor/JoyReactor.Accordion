@@ -1,4 +1,5 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient;
+using JoyReactor.Accordion.Logic.Crawlers;
 using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Media.Images;
 using JoyReactor.Accordion.Logic.Onnx;
@@ -34,7 +35,7 @@ builder.Services
         MaxAutomaticRedirections = 3,
     });
 builder.Services
-    .AddHttpClient<SearchPictureController>(httpClient =>
+    .AddHttpClient<SearchPicturesController>(httpClient =>
     {
         httpClient.Timeout = TimeSpan.FromSeconds(10);
         httpClient.DefaultRequestHeaders.Add("User-Agent", "JoyReactor.Accordion (Bot; +https://joyreactor.cc)");
@@ -48,6 +49,7 @@ builder.Services
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddSingleton<ITagClient, TagClient>();
+builder.Services.AddScoped<ITagCrawler, TagCrawler>();
 builder.Services.AddSingleton<IPostClient, PostClient>();
 builder.Services.AddScoped<IPostParser, PostParser>();
 builder.Services.AddSingleton<IImageReducer, ImageReducer>();
@@ -58,7 +60,7 @@ builder.Services.AddSingleton<IVectorDatabaseContext, VectorDatabaseContext>();
 builder.Services.AddScopedHostedService<MainTagsCrawler>();
 builder.Services.AddScopedHostedService<TagSubTagsCrawler>();
 builder.Services.AddScopedHostedService<TagInnnerRangeCrawler>();
-//builder.Services.AddScopedHostedService<TagOuterRangeCrawler>();
+builder.Services.AddScopedHostedService<TagOuterRangeCrawler>();
 builder.Services.AddScopedHostedService<PicturesWithoutVectorCrawler>();
 //builder.Services.AddScopedHostedService<TopWeekPostsCrawler>();
 

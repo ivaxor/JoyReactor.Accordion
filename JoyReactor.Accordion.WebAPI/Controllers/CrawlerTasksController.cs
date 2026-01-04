@@ -37,6 +37,8 @@ public class CrawlerTasksController(SqlDatabaseContext sqlDatabaseContext)
             PostLineType = request.PostLineType,
             PageFrom = request.PageFrom,
             PageTo = request.PageTo,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
 
         await sqlDatabaseContext.CrawlerTasks.AddAsync(task, cancellationToken);

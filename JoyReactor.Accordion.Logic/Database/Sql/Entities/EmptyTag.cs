@@ -11,6 +11,7 @@ public record EmptyTag : ISqlEntity
     {
         Id = numberId.ToGuid();
         NumberId = numberId;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public Guid Id { get; set; }

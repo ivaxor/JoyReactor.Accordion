@@ -9,9 +9,9 @@ using System.Collections.Frozen;
 
 namespace JoyReactor.Accordion.WebAPI.Controllers;
 
-[Route("api/search/picture")]
+[Route("api/search/pictures")]
 [ApiController]
-public class SearchPictureController(
+public class SearchPicturesController(
     HttpClient httpClient,
     IImageReducer imageReducer,
     IOnnxVectorConverter onnxVectorConverter,

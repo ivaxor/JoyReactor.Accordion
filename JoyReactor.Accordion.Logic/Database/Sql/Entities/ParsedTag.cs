@@ -9,11 +9,11 @@ public record ParsedTag : ISqlEntity
 {
     public ParsedTag() { }
 
-    public ParsedTag(Tag tag, ParsedTag parentTag = null)
+    public ParsedTag(Tag tag)
     {
         Id = tag.NumberId.ToGuid();
-        MainTagId = tag.NodeId.Equals(tag.MainTag.NodeId, StringComparison.Ordinal) ? null : tag.MainTag.NumberId.ToGuid();
-        ParentId = parentTag?.Id ?? tag.Hierarchy.Where(t => t.NumberId != tag.NumberId).FirstOrDefault()?.NumberId.ToGuid();
+        MainTagId = tag.NumberId == tag.MainTag.NumberId ? null : tag.MainTag.NumberId.ToGuid();
+        ParentId = tag.Hierarchy.Where(t => t.NumberId != tag.NumberId).FirstOrDefault()?.NumberId.ToGuid();
         NumberId = tag.NumberId;
         Name = tag.Name;
         PostCount = tag.PostCount.Value;

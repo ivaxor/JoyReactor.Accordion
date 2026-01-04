@@ -1,9 +1,5 @@
-﻿
-using JoyReactor.Accordion.Logic.ApiClient;
-using JoyReactor.Accordion.Logic.ApiClient.Models;
+﻿using JoyReactor.Accordion.Logic.Crawlers;
 using JoyReactor.Accordion.Logic.Database.Sql;
-using JoyReactor.Accordion.Logic.Database.Sql.Entities;
-using JoyReactor.Accordion.Logic.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -11,14 +7,15 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagOuterRangeCrawler(
     SqlDatabaseContext sqlDatabaseContext,
-    ITagClient tagClient,
+    ITagCrawler tagCrawler,
     IOptions<CrawlerSettings> settings,
     ILogger<TagOuterRangeCrawler> logger)
     : ScopedBackgroudService
 {
+    internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
+
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var periodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
         do
         {
             var lastTag = await sqlDatabaseContext.ParsedTags
@@ -30,20 +27,15 @@ public class TagOuterRangeCrawler(
                 continue;
             }
 
-            for (var tagNumber = lastTag.NumberId + 1; ; tagNumber++)
+            for (var tagNumberId = lastTag.NumberId + 1; ; tagNumberId++)
             {
-                var tag = await tagClient.GetAsync(tagNumber, TagLineType.NEW, cancellationToken);
-                if (tag == null)
+                var parsedTag = await tagCrawler.CrawlAsync(tagNumberId, cancellationToken);
+                if (parsedTag == null)
                 {
-                    logger.LogInformation("No tag found with {TagNumberId} number id", tagNumber);
-                    continue;
-                }
-                logger.LogInformation("Found tag with {TagNumberId} number id", tagNumber);
-
-                var parsedTag = new ParsedTag(tag);
-                await sqlDatabaseContext.ParsedTags.AddIgnoreExistingAsync(parsedTag, cancellationToken);
-                await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
+                    logger.LogInformation("No new last tag found. Will try again later");
+                    break;
+                }                    
             }
-        } while (await periodicTimer.WaitForNextTickAsync(cancellationToken));
+        } while (await PeriodicTimer.WaitForNextTickAsync(cancellationToken));
     }
 }
