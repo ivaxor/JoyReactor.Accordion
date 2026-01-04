@@ -1,14 +1,15 @@
 ﻿using Qdrant.Client.Grpc;
-using System.Text.Json.Serialization;
 
 namespace JoyReactor.Accordion.Logic.Database.Vector.Entities;
 
-public record ImagePayload
+public record VectorSearchResult
 {
-    public ImagePayload() { }
+    public VectorSearchResult() { }
 
-    public ImagePayload(ScoredPoint scoredPoint)
+    public VectorSearchResult(ScoredPoint scoredPoint)
     {
+        Score = scoredPoint.Score;
+
         PostIds = scoredPoint.Payload.TryGetValue("postIds", out var postIdsValue) && postIdsValue.KindCase == Value.KindOneofCase.ListValue
             ? postIdsValue.ListValue.Values.Select(v => v.StringValue).ToHashSet(StringComparer.Ordinal)
             : [];
@@ -18,9 +19,7 @@ public record ImagePayload
             : [];
     }
 
-    [JsonPropertyName("postIds")]
+    public float Score { get; set; }
     public HashSet<string> PostIds { get; set; }
-
-    [JsonPropertyName("attributeIds")]
     public HashSet<string> AttributeIds { get; set; }
 }

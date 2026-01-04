@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 using System.Collections.Frozen;
 
 namespace JoyReactor.Accordion.Logic.Media.Images;
 
 public class ImageDownloader(
     HttpClient httpClient,
+    IImageReducer imageReducer,
     IOptions<ImageSettings> settings)
     : IImageDownloader
 {
@@ -21,13 +21,6 @@ public class ImageDownloader(
     internal static readonly FrozenDictionary<ParsedPostAttributePictureType, string> ImageTypeToExtensions = ImageTypes
         .ToDictionary(type => type, type => Enum.GetName(type).ToLowerInvariant())
         .ToFrozenDictionary();
-
-    internal readonly ResizeOptions ResizeOptions = new()
-    {
-        Size = new Size(settings.Value.ResizedSize, settings.Value.ResizedSize),
-        Mode = ResizeMode.Pad,
-        Sampler = KnownResamplers.Lanczos3,
-    };
 
     public async Task<Image<Rgb24>> DownloadAsync(ParsedPostAttributePicture picture, CancellationToken cancellationToken)
     {
@@ -44,12 +37,8 @@ public class ImageDownloader(
             if (!response.IsSuccessStatusCode)
                 continue;
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-            var image = await Image.LoadAsync<Rgb24>(stream, cancellationToken);
-            image.Mutate(x => x.Resize(ResizeOptions));
-
-            return image;
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            return await imageReducer.ReduceAsync(stream, cancellationToken);
         }
 
         throw new NotImplementedException();

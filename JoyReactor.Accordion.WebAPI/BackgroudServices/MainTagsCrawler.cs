@@ -16,7 +16,7 @@ public class MainTagsCrawler(
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         using var serviceScope = serviceScopeFactory.CreateScope();
-        using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+        await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
 
         var existingMainTagNames = await sqlDatabaseContext.ParsedTags
            .Where(tagName => TagConstants.MainTags.ToArray().Contains(tagName.Name))
