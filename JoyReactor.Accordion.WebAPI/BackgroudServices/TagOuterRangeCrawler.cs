@@ -6,11 +6,10 @@ using Microsoft.Extensions.Options;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagOuterRangeCrawler(
-    SqlDatabaseContext sqlDatabaseContext,
-    ITagCrawler tagCrawler,
+    IServiceScopeFactory serviceScopeFactory,
     IOptions<CrawlerSettings> settings,
     ILogger<TagOuterRangeCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
 
@@ -18,8 +17,13 @@ public class TagOuterRangeCrawler(
     {
         do
         {
+            await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+            await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+            var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+
             var lastTag = await sqlDatabaseContext.ParsedTags
-                .OrderBy(tag => tag.NumberId)
+                .AsNoTracking()
+                .OrderBy(tag => tag.NumberId)                
                 .LastOrDefaultAsync(cancellationToken);
             if (lastTag == null)
             {

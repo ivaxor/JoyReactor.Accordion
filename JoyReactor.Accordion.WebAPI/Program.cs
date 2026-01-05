@@ -57,12 +57,12 @@ builder.Services.AddSingleton<IImageDownloader, ImageDownloader>();
 builder.Services.AddSingleton<IOnnxVectorConverter, OnnxVectorConverter>();
 builder.Services.AddSingleton<IVectorDatabaseContext, VectorDatabaseContext>();
 
-builder.Services.AddScopedHostedService<MainTagsCrawler>();
-builder.Services.AddScopedHostedService<TagSubTagsCrawler>();
-builder.Services.AddScopedHostedService<TagInnnerRangeCrawler>();
-builder.Services.AddScopedHostedService<TagOuterRangeCrawler>();
-builder.Services.AddScopedHostedService<PicturesWithoutVectorCrawler>();
-//builder.Services.AddScopedHostedService<TopWeekPostsCrawler>();
+builder.Services.AddHostedService<MainTagsCrawler>();
+builder.Services.AddHostedService<TagSubTagsCrawler>();
+builder.Services.AddHostedService<TagInnnerRangeCrawler>();
+builder.Services.AddHostedService<TagOuterRangeCrawler>();
+builder.Services.AddHostedService<PicturesWithoutVectorCrawler>();
+//builder.Services.AddHostedService<TopWeekPostsCrawler>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

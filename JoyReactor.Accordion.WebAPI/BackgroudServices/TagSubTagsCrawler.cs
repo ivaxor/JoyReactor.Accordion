@@ -7,11 +7,10 @@ using Microsoft.Extensions.Options;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagSubTagsCrawler(
-    SqlDatabaseContext sqlDatabaseContext,
-    ITagCrawler tagCrawler,
+    IServiceScopeFactory serviceScopeFactory,
     IOptions<CrawlerSettings> settings,
     ILogger<TagSubTagsCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
 
@@ -20,7 +19,12 @@ public class TagSubTagsCrawler(
         var tagsWithEmptySubTags = (ParsedTag[])null;
         do
         {
+            await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+            await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+            var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+
             tagsWithEmptySubTags = await sqlDatabaseContext.ParsedTags
+                .AsNoTracking()
                 .Where(tag => tag.MainTagId == null && tag.SubTagsCount > 0 && tag.SubTags.Count() < tag.SubTagsCount)
                 .OrderByDescending(tag => tag.Id)
                 .Take(100)

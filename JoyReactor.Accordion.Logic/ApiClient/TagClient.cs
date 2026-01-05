@@ -1,15 +1,12 @@
 ﻿using GraphQL;
 using JoyReactor.Accordion.Logic.ApiClient.Models;
 using JoyReactor.Accordion.Logic.ApiClient.Responses;
-using Microsoft.Extensions.Logging;
 using System.Collections.Frozen;
 using System.Text;
 
 namespace JoyReactor.Accordion.Logic.ApiClient;
 
-public class TagClient(
-    IApiClient apiClient,
-    ILogger<TagClient> logger)
+public class TagClient(IApiClient apiClient)
     : ITagClient
 {
     internal static readonly FrozenDictionary<TagLineType, string> TagLineTypeToValue = new Dictionary<TagLineType, string>()

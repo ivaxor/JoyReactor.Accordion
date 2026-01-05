@@ -6,10 +6,9 @@ using System.Globalization;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TopWeekPostsCrawler(
-    IPostClient postClient,
-    IPostParser postParser,
+    IServiceScopeFactory serviceScopeFactory,
     ILogger<TopWeekPostsCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -17,13 +16,19 @@ public class TopWeekPostsCrawler(
         var startWeek = 12;
 
         var endYear = DateTime.UtcNow.Date.Year;
-        var endYearWeek = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(DateTime.UtcNow.Date, CalendarWeekRule.FirstDay, DayOfWeek.Monday) - 1;
+        var endYearWeek = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(DateTime.UtcNow.Date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday) - 1;
+
+        if (endYearWeek < 0)
+        {
+            endYear -= 1;
+            endYear = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(new DateTime(endYear, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        }
 
         var nsfw = false;
 
         for (var year = startYear; year <= endYear; year++)
         {
-            var yearLastWeek = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(new DateTime(year, 12, 31), CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+            var yearLastWeek = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(new DateTime(year, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             for (var week = (year == startYear ? startWeek : 0); week <= (year == endYear ? endYearWeek : yearLastWeek); week++)
             {
                 logger.LogInformation("Crawling {Week} week of {Year} year top {PostType}", week, year, nsfw ? "nsfw posts" : "posts");
@@ -34,6 +39,10 @@ public class TopWeekPostsCrawler(
 
     internal async Task CrawlAsync(int year, int week, bool nsfw, CancellationToken cancellationToken)
     {
+        await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+        var postClient = serviceScope.ServiceProvider.GetRequiredService<IPostClient>();
+        var postParser = serviceScope.ServiceProvider.GetRequiredService<IPostParser>();
+
         var posts = await postClient.GetWeekTopPostsAsync(year, week, nsfw, cancellationToken);
         logger.LogInformation("Found {PostCount} top {Week} week of {Year} year {PostType}", posts.Length, week, year, nsfw ? "nsfw posts" : "posts");
 

@@ -7,13 +7,17 @@ using Microsoft.EntityFrameworkCore;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagInnnerRangeCrawler(
-    SqlDatabaseContext sqlDatabaseContext,
-    ITagCrawler tagCrawler,
+    IServiceScopeFactory serviceScopeFactory,
+
     ILogger<TagInnnerRangeCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+        await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+        var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+
         var take = 100;
         var skip = 0;
 
@@ -23,10 +27,11 @@ public class TagInnnerRangeCrawler(
         do
         {
             tagNumberIds = await sqlDatabaseContext.ParsedTags
+                .AsNoTracking()
                 .OrderBy(tag => tag.NumberId)
                 .Select(tag => tag.NumberId)
-                .Take(take)
                 .Skip(skip)
+                .Take(take)
                 .ToHashSetAsync(cancellationToken);
             if (tagNumberIds.Count == 0)
             {
@@ -38,6 +43,7 @@ public class TagInnnerRangeCrawler(
             tagEndNumberId = tagNumberIds.Last();
 
             var emptyTagNumberIds = await sqlDatabaseContext.EmptyTags
+                .AsNoTracking()
                 .Where(tag => tag.NumberId >= tagStartNumberId && tag.NumberId <= tagEndNumberId)
                 .Select(tag => tag.NumberId)
                 .ToHashSetAsync(cancellationToken);

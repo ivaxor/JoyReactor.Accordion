@@ -6,17 +6,21 @@ using Microsoft.EntityFrameworkCore;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class MainTagsCrawler(
-    SqlDatabaseContext sqlDatabaseContext,
-    ITagCrawler tagCrawler,
+    IServiceScopeFactory serviceScopeFactory,
     ILogger<MainTagsCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+        await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+        var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+
         var existingMainTagNames = await sqlDatabaseContext.ParsedTags
-           .Where(tagName => TagConstants.MainTags.ToArray().Contains(tagName.Name))
-           .Select(tag => tag.Name)
-           .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
+            .AsNoTracking()
+            .Where(tagName => TagConstants.MainTags.ToArray().Contains(tagName.Name))
+            .Select(tag => tag.Name)
+            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
         var nonExistingMainTagNames = TagConstants.MainTags
             .Where(tagName => !existingMainTagNames.Contains(tagName))
             .ToArray();

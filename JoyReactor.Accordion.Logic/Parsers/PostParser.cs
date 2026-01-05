@@ -33,6 +33,9 @@ public class PostParser(SqlDatabaseContext sqlDatabaseContext) : IPostParser
 
     public async Task ParseAsync(IEnumerable<Post> posts, CancellationToken cancellationToken)
     {
+        if (posts.Count() == 0)
+            return;
+
         var parsedPosts = new List<ParsedPost>(posts.Count());
         var parsedPostAttributes = new List<IParsedPostAttribute>();
         var parsedAttributeEmbeds = new List<IParsedAttributeEmbeded>();

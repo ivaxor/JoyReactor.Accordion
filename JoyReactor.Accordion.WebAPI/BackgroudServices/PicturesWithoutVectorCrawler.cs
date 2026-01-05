@@ -10,13 +10,10 @@ using System.Collections.Frozen;
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class PicturesWithoutVectorCrawler(
-    SqlDatabaseContext sqlDatabaseContext,
-    IImageDownloader imageDownloader,
-    IOnnxVectorConverter oonxVectorConverter,
-    IVectorDatabaseContext vectorDatabaseContext,
+    IServiceScopeFactory serviceScopeFactory,
     IOptions<CrawlerSettings> settings,
     ILogger<PicturesWithoutVectorCrawler> logger)
-    : ScopedBackgroudService
+    : BackgroundService
 {
     internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
 
@@ -33,6 +30,12 @@ public class PicturesWithoutVectorCrawler(
         var unprocessedPictures = (ParsedPostAttributePicture[])null;
         do
         {
+            await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+            await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+            var imageDownloader = serviceScope.ServiceProvider.GetRequiredService<IImageDownloader>();
+            var oonxVectorConverter = serviceScope.ServiceProvider.GetRequiredService<IOnnxVectorConverter>();
+            var vectorDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<IVectorDatabaseContext>();
+
             unprocessedPictures = await sqlDatabaseContext.ParsedPostAttributePictures
                 .Where(picture => picture.IsVectorCreated == false && imageTypes.Contains(picture.ImageType))
                 .OrderByDescending(picture => picture.Id)
