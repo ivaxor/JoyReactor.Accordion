@@ -31,10 +31,10 @@ public class MainTagsCrawler(
 
         if (nonExistingMainTagNames.Length == 0)
         {
-            logger.LogInformation("No new main category tags found");
+            logger.LogInformation("No new main category tags found.");
             return;
         }
-        logger.LogInformation("Crawling {TagsCount} main category tags", nonExistingMainTagNames.Count());
+        logger.LogInformation("Crawling {TagsCount} main category tags.", nonExistingMainTagNames.Count());
 
         foreach (var tagName in nonExistingMainTagNames)
             await tagCrawler.CrawlAsync(tagName, cancellationToken);

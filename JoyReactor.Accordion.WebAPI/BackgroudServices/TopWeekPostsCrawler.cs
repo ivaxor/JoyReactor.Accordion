@@ -35,7 +35,7 @@ public class TopWeekPostsCrawler(
             var yearLastWeek = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(new DateTime(year, 12, 31), CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             for (var week = (year == startYear ? startWeek : 0); week <= (year == endYear ? endYearWeek : yearLastWeek); week++)
             {
-                logger.LogInformation("Crawling {Week} week of {Year} year top {PostType}", week, year, nsfw ? "nsfw posts" : "posts");
+                logger.LogInformation("Crawling {Week} week of {Year} year top {PostType}.", week, year, nsfw ? "nsfw posts" : "posts");
                 await CrawlAsync(year, week, nsfw, cancellationToken);
             }
         }
@@ -48,7 +48,7 @@ public class TopWeekPostsCrawler(
         var postParser = serviceScope.ServiceProvider.GetRequiredService<IPostParser>();
 
         var posts = await postClient.GetWeekTopPostsAsync(year, week, nsfw, cancellationToken);
-        logger.LogInformation("Found {PostCount} top {Week} week of {Year} year {PostType}", posts.Length, week, year, nsfw ? "nsfw posts" : "posts");
+        logger.LogInformation("Found {PostCount} top {Week} week of {Year} year {PostType}.", posts.Length, week, year, nsfw ? "nsfw posts" : "posts");
 
         await postParser.ParseAsync(posts, cancellationToken);
     }

@@ -25,7 +25,7 @@ public class TagOuterRangeCrawler(
             .LastOrDefaultAsync(cancellationToken);
         if (lastTag == null)
         {
-            logger.LogInformation("No tags found. Will try again later");
+            logger.LogInformation("No tags found. Will try again later.");
             return;
         }
 
@@ -34,7 +34,7 @@ public class TagOuterRangeCrawler(
             var parsedTag = await tagCrawler.CrawlAsync(tagNumberId, cancellationToken);
             if (parsedTag == null)
             {
-                logger.LogInformation("No new last tag found. Will try again later");
+                logger.LogInformation("No new last tag found. Will try again later.");
                 break;
             }
         }

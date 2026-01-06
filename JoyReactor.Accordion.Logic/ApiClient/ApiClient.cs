@@ -29,7 +29,7 @@ public class ApiClient(
             UseJitter = true,
             OnRetry = args =>
             {
-                logger.LogWarning("Failed to send GraphQL request to API. Message: {Message}. Attempt: {Attempt}", args.Outcome.Exception?.Message, args.AttemptNumber);
+                logger.LogWarning("Failed to send GraphQL request to API. Attempt: {Attempt}/{MaxAttempts}. Message: {ExceptionMessage}.", args.AttemptNumber, settings.Value.MaxRetryAttempts, args.Outcome.Exception?.Message);
                 return default;
             }
         })
@@ -48,7 +48,7 @@ public class ApiClient(
             {
                 var response = await graphQlClient.SendQueryAsync<T>(request, ct);
                 foreach (var error in response.Errors ?? [])
-                    logger.LogError("Failed response from GraphQL API recieved. Message: {Message}", error.Message);
+                    logger.LogError("Failed response from GraphQL API recieved. Message: {ExceptionMessage}.", error.Message);
 
                 return response.Data;
             }, cancellationToken);

@@ -19,10 +19,10 @@ public class TagCrawler(
         var tag = await tagClient.GetAsync(numberId, TagLineType.NEW, cancellationToken);
         if (tag == null)
         {
-            logger.LogInformation("No tag found using \"{TagNumberId}\" number id", numberId);
+            logger.LogInformation("No tag found using \"{TagNumberId}\" number id.", numberId);
             return null;
         }
-        logger.LogInformation("Found \"{TagName}\" tag using {TagNumberId} number id", tag.Name, tag.NumberId);
+        logger.LogInformation("Found \"{TagName}\" tag using {TagNumberId} number id.", tag.Name, tag.NumberId);
 
         await CrawlParentTagAsync(tag, cancellationToken);
 
@@ -38,10 +38,10 @@ public class TagCrawler(
         var tag = await tagClient.GetByNameAsync(name, TagLineType.NEW, cancellationToken);
         if (tag == null)
         {
-            logger.LogInformation("No tag found using \"{TagName}\" name", name);
+            logger.LogInformation("No tag found using \"{TagName}\" name.", name);
             return null;
         }
-        logger.LogInformation("Found \"{TagName}\" tag using name", tag.Name);
+        logger.LogInformation("Found \"{TagName}\" tag using name.", tag.Name);
 
         await CrawlParentTagAsync(tag, cancellationToken);
 
@@ -59,7 +59,7 @@ public class TagCrawler(
             .Select(subTag => new ParsedTag(subTag))
             .ToArray();
 
-        logger.LogInformation("Found {TagsCount} sub tags using {TagNumberId} parent tag number id", parsedSubTags.Count(), parentNumberId);
+        logger.LogInformation("Found {TagsCount} sub tags using {TagNumberId} parent tag number id.", parsedSubTags.Count(), parentNumberId);
         if (parsedSubTags.Length == 0)
             return;
 
@@ -75,7 +75,7 @@ public class TagCrawler(
         if (parentTag == null)
             return;
 
-        logger.LogInformation("Crawling parent tag for \"{TagName}\" tag", tag.Name);
+        logger.LogInformation("Crawling parent tag for \"{TagName}\" tag.", tag.Name);
         await CrawlAsync(parentTag.NumberId, cancellationToken);
     }
 }

@@ -38,7 +38,7 @@ public class TagInnnerRangeCrawler(
                 .ToHashSetAsync(cancellationToken);
             if (tagNumberIds.Count == 0)
             {
-                logger.LogInformation("No tags found. Will try again later");
+                logger.LogInformation("No tags found. Will try again later.");
                 continue;
             }
 

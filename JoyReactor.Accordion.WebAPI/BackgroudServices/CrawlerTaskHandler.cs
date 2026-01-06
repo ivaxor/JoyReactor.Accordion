@@ -37,7 +37,7 @@ public class CrawlerTaskHandler(
         foreach (var (id, (task, cts)) in completedTasks)
         {
             if (task.IsFaulted)
-                logger.LogError(task.Exception, "Crawler task {CrawlerTaskId} failed", id);
+                logger.LogError(task.Exception, "Crawler task {CrawlerTaskId} failed. Message: {ExceptionMessage}.", id, task.Exception.Message);
 
             if (TaskWithCancellationTokenSources.TryRemove(id, out var _))
                 cts.Dispose();
@@ -48,7 +48,7 @@ public class CrawlerTaskHandler(
             .ToArray();
         foreach (var (id, crawlerTask) in newCrawlerTasks)
         {
-            logger.LogInformation("Starting {CrawlerTaskId} crawler task", id);
+            logger.LogInformation("Starting {CrawlerTaskId} crawler task.", id);
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var ct = cts.Token;
             var task = CrawlAsync(crawlerTask.Id, ct);
@@ -61,7 +61,7 @@ public class CrawlerTaskHandler(
             .ToArray();
         foreach (var (id, (task, cts)) in oldTasks)
         {
-            logger.LogInformation("Stopping {CrawlerTaskId} crawler task", id);
+            logger.LogInformation("Stopping {CrawlerTaskId} crawler task.", id);
             await cts.CancelAsync();
         }
     }
@@ -91,7 +91,7 @@ public class CrawlerTaskHandler(
 
                 var tagNumberId = crawlerTask.TagId.ToInt();
                 postPager = await postClient.GetByTagAsync(tagNumberId, crawlerTask.PostLineType, crawlerTask.PageCurrent.Value, cancellationToken);
-                logger.LogInformation("Found {PostCount} posts using {TagNumberId} tag id on {Page} page", postPager.Posts.Length, tagNumberId, crawlerTask.PageCurrent);
+                logger.LogInformation("Found {PostCount} posts using {TagNumberId} tag id on {Page} page.", postPager.Posts.Length, tagNumberId, crawlerTask.PageCurrent);
 
                 await postParser.ParseAsync(postPager.Posts, cancellationToken);
 
@@ -108,7 +108,7 @@ public class CrawlerTaskHandler(
                 await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
             } while (isFullPage && crawlerTask.PageCurrent <= (crawlerTask.PageTo ?? int.MaxValue));
 
-            logger.LogInformation("Crawler task {CrawlerTaskId} finished", crawlerTask.Id);
+            logger.LogInformation("Crawler task {CrawlerTaskId} finished.", crawlerTask.Id);
         }
     }
 }

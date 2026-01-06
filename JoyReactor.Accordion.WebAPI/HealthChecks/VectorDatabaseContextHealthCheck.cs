@@ -16,7 +16,7 @@ public class VectorDatabaseContextHealthCheck(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Health check failed");
+            logger.LogError(ex, "Health check failed. Message: {ExceptionMessage}.", ex.Message);
             return HealthCheckResult.Unhealthy();
         }
     }

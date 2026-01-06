@@ -30,7 +30,7 @@ public class ImageDownloader(
             UseJitter = true,
             OnRetry = args =>
             {
-                logger.LogWarning("Failed to send HTTP request to CDN. Message: {Message}. Attempt: {Attempt}", args.Outcome.Exception?.Message, args.AttemptNumber);
+                logger.LogWarning("Failed to send HTTP request to CDN. Attempt: {Attempt}/{MaxAttempts}. Message: {Message}. ", args.AttemptNumber, settings.Value.MaxRetryAttempts, args.Outcome.Exception?.Message);
                 return default;
             }
         })

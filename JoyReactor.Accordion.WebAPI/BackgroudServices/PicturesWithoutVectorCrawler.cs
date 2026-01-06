@@ -41,10 +41,10 @@ public class PicturesWithoutVectorCrawler(
                 .ToArrayAsync(cancellationToken);
 
             if (unprocessedPictures.Length != 0)
-                logger.LogInformation("Starting crawling {PicturesCount} pictures without vectors", unprocessedPictures.Length);
+                logger.LogInformation("Starting crawling {PicturesCount} pictures without vectors.", unprocessedPictures.Length);
             else
             {
-                logger.LogInformation("No pictures without vectors found. Will try again later");
+                logger.LogInformation("No pictures without vector found. Will try again later.");
                 return;
             }
 
@@ -61,7 +61,7 @@ public class PicturesWithoutVectorCrawler(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to crawl {PictureAttributeId} picture without vector", picture.AttributeId);
+                    logger.LogError(ex, "Failed to crawl {PictureAttributeId} picture without vector.", picture.AttributeId);
                 }
             }
 

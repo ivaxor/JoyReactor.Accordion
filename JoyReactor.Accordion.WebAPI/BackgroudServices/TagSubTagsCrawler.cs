@@ -31,10 +31,10 @@ public class TagSubTagsCrawler(
                 .ToArrayAsync(cancellationToken);
 
             if (tagsWithEmptySubTags.Length != 0)
-                logger.LogInformation("Crawling {TagsCount} tags for new sub tags", tagsWithEmptySubTags.Count());
+                logger.LogInformation("Crawling {TagsCount} tags for new sub tags.", tagsWithEmptySubTags.Count());
             else
             {
-                logger.LogInformation("No tags without sub tags found. Will try again later");
+                logger.LogInformation("No tags without sub tags found. Will try again later.");
                 continue;
             }
 
