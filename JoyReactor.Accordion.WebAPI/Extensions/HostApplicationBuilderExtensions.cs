@@ -1,4 +1,7 @@
-﻿using GraphQL.Client.Abstractions;
+﻿using Elastic.Ingest.Elasticsearch;
+using Elastic.Ingest.Elasticsearch.DataStreams;
+using Elastic.Serilog.Sinks;
+using GraphQL.Client.Abstractions;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using JoyReactor.Accordion.Logic.ApiClient;
@@ -13,11 +16,37 @@ using Microsoft.Extensions.Options;
 using Microsoft.ML.OnnxRuntime;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using Serilog;
 
 namespace JoyReactor.Accordion.WebAPI.Extensions;
 
 public static class HostApplicationBuilderExtensions
 {
+    public static void AddLogging(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((context, services, configuration) =>
+        {
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .WriteTo.Console();
+
+            var elasticsearchUri = context.Configuration["Serilog:ElasticsearchUri"];
+            if (!string.IsNullOrWhiteSpace(elasticsearchUri))
+            {
+                configuration.WriteTo.Elasticsearch([new Uri(elasticsearchUri)], options =>
+                {
+                    options.DataStream = new DataStreamName("logs", context.HostingEnvironment.ApplicationName.ToLower(), context.HostingEnvironment.EnvironmentName.ToLower());
+                    options.BootstrapMethod = BootstrapMethod.Failure;
+                });
+            }
+
+            if (context.HostingEnvironment.IsDevelopment())
+                configuration.WriteTo.Debug();
+        });
+    }
+
     public static void AddOptionsFromConfiguration(this IHostApplicationBuilder builder)
     {
         builder.Services.Configure<ApiClientSettings>(builder.Configuration.GetSection(nameof(ApiClientSettings)));

@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Dockerfile" />
+    <File Path="Dockerfile.Nvidia" />
+  </Folder>
   <Project Path="JoyReactor.Accordion.Logic/JoyReactor.Accordion.Logic.csproj" />
   <Project Path="JoyReactor.Accordion.Tests/JoyReactor.Accordion.Tests.csproj" Id="00cefca0-7abb-4f2a-8efb-4d1cc554c51f" />
   <Project Path="JoyReactor.Accordion.WebAPI/JoyReactor.Accordion.WebAPI.csproj" Id="56eb5b00-fbbe-42a7-a450-a6a3191c613f" />

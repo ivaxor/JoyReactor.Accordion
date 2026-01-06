@@ -1,7 +1,4 @@
-﻿using Elastic.Ingest.Elasticsearch;
-using Elastic.Ingest.Elasticsearch.DataStreams;
-using Elastic.Serilog.Sinks;
-using JoyReactor.Accordion.Logic.ApiClient;
+﻿using JoyReactor.Accordion.Logic.ApiClient;
 using JoyReactor.Accordion.Logic.Crawlers;
 using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Media.Images;
@@ -14,31 +11,12 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Reflection;
+using System.Text;
+
+Console.OutputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Host.UseSerilog((context, services, configuration) =>
-{
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
-        .WriteTo.Console();
-
-    var elasticsearchUri = context.Configuration["Serilog:ElasticsearchUri"];
-    if (!string.IsNullOrWhiteSpace(elasticsearchUri))
-    {
-        configuration.WriteTo.Elasticsearch([new Uri(elasticsearchUri)], options =>
-        {
-            options.DataStream = new DataStreamName("logs", context.HostingEnvironment.ApplicationName.ToLower(), context.HostingEnvironment.EnvironmentName.ToLower());
-            options.BootstrapMethod = BootstrapMethod.Failure;
-        });
-    }
-
-    if (context.HostingEnvironment.IsDevelopment())
-        configuration.WriteTo.Debug();
-});
-
+builder.AddLogging();
 builder.AddOptionsFromConfiguration();
 builder.AddGraphQlClient();
 builder.AddDatabases();

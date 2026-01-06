@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Onnx\clip-ViT-B-32-vision.onnx">
+    <Content Include="Onnx\clip-ViT-B-32-vision.onnx" Condition="Exists('Onnx\clip-ViT-B-32-vision.onnx')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
