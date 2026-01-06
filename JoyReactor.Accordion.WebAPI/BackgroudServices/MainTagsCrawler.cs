@@ -2,15 +2,19 @@
 using JoyReactor.Accordion.Logic.Crawlers;
 using JoyReactor.Accordion.Logic.Database.Sql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class MainTagsCrawler(
     IServiceScopeFactory serviceScopeFactory,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<MainTagsCrawler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override bool IsIndefinite => false;
+
+    protected override async Task RunAsync(CancellationToken cancellationToken)
     {
         await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
         await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();

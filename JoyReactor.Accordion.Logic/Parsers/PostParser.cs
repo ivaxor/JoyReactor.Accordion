@@ -62,7 +62,7 @@ public class PostParser(SqlDatabaseContext sqlDatabaseContext) : IPostParser
         await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
     }
 
-    internal async Task AddRangeIgnoreExistingAsync(IEnumerable<IParsedAttributeEmbeded> parsedAttributeEmbeds, CancellationToken cancellationToken)
+    protected async Task AddRangeIgnoreExistingAsync(IEnumerable<IParsedAttributeEmbeded> parsedAttributeEmbeds, CancellationToken cancellationToken)
     {
         foreach (var group in parsedAttributeEmbeds.GroupBy(attribute => attribute.GetType()))
         {
@@ -78,7 +78,7 @@ public class PostParser(SqlDatabaseContext sqlDatabaseContext) : IPostParser
         }
     }
 
-    internal async Task AddRangeIgnoreExistingAsync(IEnumerable<IParsedPostAttribute> parsedPostAttributes, CancellationToken cancellationToken)
+    protected async Task AddRangeIgnoreExistingAsync(IEnumerable<IParsedPostAttribute> parsedPostAttributes, CancellationToken cancellationToken)
     {
         foreach (var group in parsedPostAttributes.GroupBy(postAttribute => postAttribute.GetType()))
         {
@@ -91,7 +91,7 @@ public class PostParser(SqlDatabaseContext sqlDatabaseContext) : IPostParser
         }
     }
 
-    internal async Task<IParsedAttributeEmbeded> CreateAttributeAsync(PostAttribute postAttribute, CancellationToken cancellationToken)
+    protected async Task<IParsedAttributeEmbeded> CreateAttributeAsync(PostAttribute postAttribute, CancellationToken cancellationToken)
     {
         switch (postAttribute.Type)
         {
@@ -153,7 +153,7 @@ public class PostParser(SqlDatabaseContext sqlDatabaseContext) : IPostParser
         }
     }
 
-    internal static IParsedPostAttribute CreatePostAttribute(PostAttribute postAttribute, ParsedPost post, IParsedAttributeEmbeded parsedAttribute)
+    protected static IParsedPostAttribute CreatePostAttribute(PostAttribute postAttribute, ParsedPost post, IParsedAttributeEmbeded parsedAttribute)
     {
         return postAttribute.Type switch
         {

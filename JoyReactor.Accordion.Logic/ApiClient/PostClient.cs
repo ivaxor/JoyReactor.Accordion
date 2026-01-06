@@ -9,7 +9,7 @@ namespace JoyReactor.Accordion.Logic.ApiClient;
 public class PostClient(IApiClient apiClient)
     : IPostClient
 {
-    internal static readonly FrozenDictionary<PostLineType, int> PostLineTypeToValue = new Dictionary<PostLineType, int>() {
+    protected static readonly FrozenDictionary<PostLineType, int> PostLineTypeToValue = new Dictionary<PostLineType, int>() {
         { PostLineType.ALL, 0 },
         { PostLineType.GOOD, 1 },
         { PostLineType.BEST, 2 },

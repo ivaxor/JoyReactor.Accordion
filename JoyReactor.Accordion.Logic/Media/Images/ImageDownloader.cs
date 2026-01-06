@@ -18,7 +18,7 @@ public class ImageDownloader(
     ILogger<ImageDownloader> logger)
     : IImageDownloader
 {
-    internal readonly ResiliencePipeline ResiliencePipeline = new ResiliencePipelineBuilder()
+    protected readonly ResiliencePipeline ResiliencePipeline = new ResiliencePipelineBuilder()
         .AddRetry(new RetryStrategyOptions
         {
             ShouldHandle = new PredicateBuilder()
@@ -37,18 +37,18 @@ public class ImageDownloader(
         .AddTimeout(TimeSpan.FromSeconds(10))
         .Build();
 
-    internal static readonly ParsedPostAttributePictureType[] ImageTypes = [
+    protected static readonly ParsedPostAttributePictureType[] ImageTypes = [
         ParsedPostAttributePictureType.PNG,
         ParsedPostAttributePictureType.JPEG,
         ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
     ];
 
-    internal static readonly FrozenDictionary<ParsedPostAttributePictureType, string> ImageTypeToExtensions = ImageTypes
+    protected static readonly FrozenDictionary<ParsedPostAttributePictureType, string> ImageTypeToExtensions = ImageTypes
         .ToDictionary(type => type, type => Enum.GetName(type).ToLowerInvariant())
         .ToFrozenDictionary();
 
-    internal static readonly FrozenSet<string> AllowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected static readonly FrozenSet<string> AllowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "image/png",
         "image/jpeg",

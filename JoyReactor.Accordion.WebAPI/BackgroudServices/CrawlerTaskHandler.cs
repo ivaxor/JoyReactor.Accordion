@@ -6,67 +6,66 @@ using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using JoyReactor.Accordion.Logic.Extensions;
 using JoyReactor.Accordion.Logic.Parsers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class CrawlerTaskHandler(
     IServiceScopeFactory serviceScopeFactory,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<CrawlerTaskHandler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    internal readonly PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+    protected override bool IsIndefinite => true;
 
-    internal readonly ConcurrentDictionary<Guid, (Task Task, CancellationTokenSource Cts)> TaskWithCancellationTokenSources = new ConcurrentDictionary<Guid, (Task Task, CancellationTokenSource Cts)>();
+    protected readonly ConcurrentDictionary<Guid, (Task Task, CancellationTokenSource Cts)> TaskWithCancellationTokenSources = new ConcurrentDictionary<Guid, (Task Task, CancellationTokenSource Cts)>();
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken cancellationToken)
     {
-        do
+        await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+        await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+
+        var crawlerTasks = await sqlDatabaseContext.CrawlerTasks
+            .AsNoTracking()
+            .Where(crawlerTask => crawlerTask.IsCompleted == false)
+            .ToDictionaryAsync(crawlerTask => crawlerTask.Id, crawlerTask => crawlerTask, cancellationToken);
+
+        var completedTasks = TaskWithCancellationTokenSources
+            .Where(task => task.Value.Item1.IsCompleted)
+            .ToArray();
+        foreach (var (id, (task, cts)) in completedTasks)
         {
-            await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
-            await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+            if (task.IsFaulted)
+                logger.LogError("Crawler task {CrawlerTaskId} failed", id, task.Exception);
 
-            var crawlerTasks = await sqlDatabaseContext.CrawlerTasks
-                .AsNoTracking()
-                .Where(crawlerTask => crawlerTask.IsCompleted == false)
-                .ToDictionaryAsync(crawlerTask => crawlerTask.Id, crawlerTask => crawlerTask, cancellationToken);
+            TaskWithCancellationTokenSources.TryRemove(id, out var _);
+        }
 
-            var completedTasks = TaskWithCancellationTokenSources
-                .Where(task => task.Value.Item1.IsCompleted)
-                .ToArray();
-            foreach (var (id, (task, cts)) in completedTasks)
-            {
-                if (task.IsFaulted)
-                    logger.LogError("Crawler task {CrawlerTaskId} failed", id, task.Exception);
+        var newCrawlerTasks = crawlerTasks
+            .Where(crawkerTask => !TaskWithCancellationTokenSources.ContainsKey(crawkerTask.Key))
+            .ToArray();
+        foreach (var (id, crawlerTask) in newCrawlerTasks)
+        {
+            logger.LogInformation("Starting {CrawlerTaskId} crawler task", id);
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var ct = cts.Token;
+            var task = CrawlAsync(crawlerTask.Id, ct);
 
-                TaskWithCancellationTokenSources.TryRemove(id, out var _);
-            }
+            TaskWithCancellationTokenSources.TryAdd(id, new(task, cts));
+        }
 
-            var newCrawlerTasks = crawlerTasks
-                .Where(crawkerTask => !TaskWithCancellationTokenSources.ContainsKey(crawkerTask.Key))
-                .ToArray();
-            foreach (var (id, crawlerTask) in newCrawlerTasks)
-            {
-                logger.LogInformation("Starting {CrawlerTaskId} crawler task", id);
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                var ct = cts.Token;
-                var task = CrawlAsync(crawlerTask.Id, ct);
-
-                TaskWithCancellationTokenSources.TryAdd(id, new(task, cts));
-            }
-
-            var oldTasks = TaskWithCancellationTokenSources
-                .Where(task => !crawlerTasks.ContainsKey(task.Key))
-                .ToArray();
-            foreach (var (id, (task, cts)) in oldTasks)
-            {
-                logger.LogInformation("Stopping {CrawlerTaskId} crawler task", id);
-                await cts.CancelAsync();
-            }
-        } while (await periodicTimer.WaitForNextTickAsync(cancellationToken));
+        var oldTasks = TaskWithCancellationTokenSources
+            .Where(task => !crawlerTasks.ContainsKey(task.Key))
+            .ToArray();
+        foreach (var (id, (task, cts)) in oldTasks)
+        {
+            logger.LogInformation("Stopping {CrawlerTaskId} crawler task", id);
+            await cts.CancelAsync();
+        }
     }
 
-    internal async Task CrawlAsync(Guid crawlerTaskId, CancellationToken cancellationToken)
+    protected async Task CrawlAsync(Guid crawlerTaskId, CancellationToken cancellationToken)
     {
         await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
         await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();

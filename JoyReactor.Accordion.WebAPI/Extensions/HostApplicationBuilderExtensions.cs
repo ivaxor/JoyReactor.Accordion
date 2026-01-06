@@ -25,7 +25,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.Configure<OnnxSettings>(builder.Configuration.GetSection(nameof(OnnxSettings)));
         builder.Services.Configure<PostgreSqlSettings>(builder.Configuration.GetSection(nameof(PostgreSqlSettings)));
         builder.Services.Configure<QdrantSettings>(builder.Configuration.GetSection(nameof(QdrantSettings)));
-        builder.Services.Configure<CrawlerSettings>(builder.Configuration.GetSection(nameof(CrawlerSettings)));
+        builder.Services.Configure<BackgroundServiceSettings>(builder.Configuration.GetSection(nameof(BackgroundServiceSettings)));
     }
 
     public static void AddGraphQlClient(this IHostApplicationBuilder builder)

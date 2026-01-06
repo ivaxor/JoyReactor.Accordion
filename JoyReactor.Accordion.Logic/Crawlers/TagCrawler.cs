@@ -67,7 +67,7 @@ public class TagCrawler(
         await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
     }
 
-    internal async Task CrawlParentTagAsync(Tag tag, CancellationToken cancellationToken)
+    protected async Task CrawlParentTagAsync(Tag tag, CancellationToken cancellationToken)
     {
         var parentTag = tag.Hierarchy
             .Where(t => t.NumberId != tag.NumberId)

@@ -7,39 +7,36 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagOuterRangeCrawler(
     IServiceScopeFactory serviceScopeFactory,
-    IOptions<CrawlerSettings> settings,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<TagOuterRangeCrawler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
+    protected override bool IsIndefinite => true;
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken cancellationToken)
     {
-        do
+        await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
+        await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
+        var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+
+        var lastTag = await sqlDatabaseContext.ParsedTags
+            .AsNoTracking()
+            .OrderBy(tag => tag.NumberId)
+            .LastOrDefaultAsync(cancellationToken);
+        if (lastTag == null)
         {
-            await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
-            await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
-            var tagCrawler = serviceScope.ServiceProvider.GetRequiredService<ITagCrawler>();
+            logger.LogInformation("No tags found. Will try again later");
+            return;
+        }
 
-            var lastTag = await sqlDatabaseContext.ParsedTags
-                .AsNoTracking()
-                .OrderBy(tag => tag.NumberId)                
-                .LastOrDefaultAsync(cancellationToken);
-            if (lastTag == null)
+        for (var tagNumberId = lastTag.NumberId + 1; ; tagNumberId++)
+        {
+            var parsedTag = await tagCrawler.CrawlAsync(tagNumberId, cancellationToken);
+            if (parsedTag == null)
             {
-                logger.LogInformation("No tags found. Will try again later");
-                continue;
+                logger.LogInformation("No new last tag found. Will try again later");
+                break;
             }
-
-            for (var tagNumberId = lastTag.NumberId + 1; ; tagNumberId++)
-            {
-                var parsedTag = await tagCrawler.CrawlAsync(tagNumberId, cancellationToken);
-                if (parsedTag == null)
-                {
-                    logger.LogInformation("No new last tag found. Will try again later");
-                    break;
-                }                    
-            }
-        } while (await PeriodicTimer.WaitForNextTickAsync(cancellationToken));
+        }
     }
 }

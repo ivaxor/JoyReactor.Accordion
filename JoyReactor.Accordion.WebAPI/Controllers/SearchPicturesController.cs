@@ -18,8 +18,8 @@ public class SearchPicturesController(
     IVectorDatabaseContext vectorDatabaseContext)
     : ControllerBase
 {
-    internal const int FileSizeLimit = 5 * 1024 * 1024;
-    internal static readonly FrozenSet<string> AllowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected const int FileSizeLimit = 5 * 1024 * 1024;
+    protected static readonly FrozenSet<string> AllowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "application/octet-stream",
         "image/png",
@@ -27,7 +27,7 @@ public class SearchPicturesController(
         "image/tiff",
         "image/bmp",
     }.ToFrozenSet();
-    internal static readonly FrozenSet<string> AllowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected static readonly FrozenSet<string> AllowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "png",
         "jpeg",
@@ -90,7 +90,7 @@ public class SearchPicturesController(
         return Ok(results);
     }
 
-    internal async Task<VectorSearchResult[]> SearchAsync(Stream stream, CancellationToken cancellationToken)
+    protected async Task<VectorSearchResult[]> SearchAsync(Stream stream, CancellationToken cancellationToken)
     {
         await using var boundedStream = new FileBufferingReadStream(stream, FileSizeLimit);
         await boundedStream.DrainAsync(cancellationToken);

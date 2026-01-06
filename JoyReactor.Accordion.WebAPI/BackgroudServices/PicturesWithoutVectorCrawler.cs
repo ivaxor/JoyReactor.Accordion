@@ -11,22 +11,22 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class PicturesWithoutVectorCrawler(
     IServiceScopeFactory serviceScopeFactory,
-    IOptions<CrawlerSettings> settings,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<PicturesWithoutVectorCrawler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
+    protected override bool IsIndefinite => true;
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected static readonly FrozenSet<ParsedPostAttributePictureType> ImageTypes = new HashSet<ParsedPostAttributePictureType>()
     {
-        var imageTypes = new ParsedPostAttributePictureType[] {
-            ParsedPostAttributePictureType.PNG,
-            ParsedPostAttributePictureType.JPEG,
-            ParsedPostAttributePictureType.BMP,
-            ParsedPostAttributePictureType.TIFF,
-        };
-        var imageTypeToExtensions = imageTypes.ToDictionary(type => type, type => Enum.GetName(type)!).ToFrozenDictionary();
+        ParsedPostAttributePictureType.PNG,
+        ParsedPostAttributePictureType.JPEG,
+        ParsedPostAttributePictureType.BMP,
+        ParsedPostAttributePictureType.TIFF,
+    }.ToFrozenSet();
 
+    protected override async Task RunAsync(CancellationToken cancellationToken)
+    {
         var unprocessedPictures = (ParsedPostAttributePicture[])null;
         do
         {
@@ -37,7 +37,7 @@ public class PicturesWithoutVectorCrawler(
             var vectorDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<IVectorDatabaseContext>();
 
             unprocessedPictures = await sqlDatabaseContext.ParsedPostAttributePictures
-                .Where(picture => picture.IsVectorCreated == false && imageTypes.Contains(picture.ImageType))
+                .Where(picture => picture.IsVectorCreated == false && ImageTypes.Contains(picture.ImageType))
                 .OrderByDescending(picture => picture.Id)
                 .Take(100)
                 .ToArrayAsync(cancellationToken);
@@ -46,9 +46,8 @@ public class PicturesWithoutVectorCrawler(
                 logger.LogInformation("Starting crawling {PicturesCount} pictures without vectors", unprocessedPictures.Length);
             else
             {
-
                 logger.LogInformation("No pictures without vectors found. Will try again later");
-                continue;
+                return;
             }
 
             var pictureVectors = unprocessedPictures.ToDictionary(picture => picture, picture => (float[])null);
@@ -71,6 +70,6 @@ public class PicturesWithoutVectorCrawler(
             await vectorDatabaseContext.UpsertAsync(pictureVectors, cancellationToken);
             sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(unprocessedPictures);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
-        } while (unprocessedPictures.Length != 0 || await PeriodicTimer.WaitForNextTickAsync(cancellationToken));
+        } while (unprocessedPictures.Length != 0);
     }
 }

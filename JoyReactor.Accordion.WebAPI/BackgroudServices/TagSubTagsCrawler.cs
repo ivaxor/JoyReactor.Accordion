@@ -8,13 +8,13 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TagSubTagsCrawler(
     IServiceScopeFactory serviceScopeFactory,
-    IOptions<CrawlerSettings> settings,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<TagSubTagsCrawler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    internal readonly PeriodicTimer PeriodicTimer = new PeriodicTimer(settings.Value.SubsequentRunDelay);
+    protected override bool IsIndefinite => true;
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken cancellationToken)
     {
         var tagsWithEmptySubTags = (ParsedTag[])null;
         do
@@ -40,6 +40,6 @@ public class TagSubTagsCrawler(
 
             foreach (var parsedTag in tagsWithEmptySubTags)
                 await tagCrawler.CrawlSubTagsAsync(parsedTag.NumberId, cancellationToken);
-        } while (tagsWithEmptySubTags.Length != 0 || await PeriodicTimer.WaitForNextTickAsync(cancellationToken));
+        } while (tagsWithEmptySubTags.Length != 0);
     }
 }

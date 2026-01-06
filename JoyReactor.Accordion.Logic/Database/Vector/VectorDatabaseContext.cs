@@ -41,7 +41,7 @@ public class VectorDatabaseContext(
             .ToArray();
     }
 
-    internal static PointStruct CreatePointStruct(ParsedPostAttributePicture picture, float[] vector)
+    protected static PointStruct CreatePointStruct(ParsedPostAttributePicture picture, float[] vector)
     {
         return new PointStruct
         {

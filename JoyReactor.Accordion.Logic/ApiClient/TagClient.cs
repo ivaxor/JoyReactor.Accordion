@@ -9,7 +9,7 @@ namespace JoyReactor.Accordion.Logic.ApiClient;
 public class TagClient(IApiClient apiClient)
     : ITagClient
 {
-    internal static readonly FrozenDictionary<TagLineType, string> TagLineTypeToValue = new Dictionary<TagLineType, string>()
+    protected static readonly FrozenDictionary<TagLineType, string> TagLineTypeToValue = new Dictionary<TagLineType, string>()
     {
         { TagLineType.NEW, "NEW" },
         { TagLineType.BEST, "BEST" },

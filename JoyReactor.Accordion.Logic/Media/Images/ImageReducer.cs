@@ -8,7 +8,7 @@ namespace JoyReactor.Accordion.Logic.Media.Images;
 public class ImageReducer(IOptions<ImageSettings> settings)
     : IImageReducer
 {
-    internal readonly ResizeOptions ResizeOptions = new()
+    protected readonly ResizeOptions ResizeOptions = new()
     {
         Size = new Size(settings.Value.ResizedSize, settings.Value.ResizedSize),
         Mode = ResizeMode.Pad,

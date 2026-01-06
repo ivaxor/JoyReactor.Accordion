@@ -1,6 +1,6 @@
 ﻿namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
-public record CrawlerSettings
+public record BackgroundServiceSettings
 {
     public TimeSpan SubsequentRunDelay { get; set; }
 }

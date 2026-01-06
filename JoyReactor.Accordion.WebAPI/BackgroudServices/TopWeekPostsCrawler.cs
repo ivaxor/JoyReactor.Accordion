@@ -1,16 +1,20 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient;
 using JoyReactor.Accordion.Logic.Parsers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Globalization;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class TopWeekPostsCrawler(
     IServiceScopeFactory serviceScopeFactory,
+    IOptions<BackgroundServiceSettings> settings,
     ILogger<TopWeekPostsCrawler> logger)
-    : BackgroundService
+    : RobustBackgroundService(settings, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override bool IsIndefinite => false;
+
+    protected override async Task RunAsync(CancellationToken cancellationToken)
     {
         var startYear = 2009;
         var startWeek = 12;
@@ -37,7 +41,7 @@ public class TopWeekPostsCrawler(
         }
     }
 
-    internal async Task CrawlAsync(int year, int week, bool nsfw, CancellationToken cancellationToken)
+    protected async Task CrawlAsync(int year, int week, bool nsfw, CancellationToken cancellationToken)
     {
         await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
         var postClient = serviceScope.ServiceProvider.GetRequiredService<IPostClient>();

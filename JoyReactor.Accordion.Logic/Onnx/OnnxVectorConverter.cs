@@ -11,8 +11,8 @@ public class OnnxVectorConverter(
     IOptions<OnnxSettings> settings)
     : IOnnxVectorConverter
 {
-    internal static readonly float[] Mean = [0.48145466f, 0.4578275f, 0.40821073f];
-    internal static readonly float[] Std = [0.26862954f, 0.26130258f, 0.27577711f];
+    protected static readonly float[] Mean = [0.48145466f, 0.4578275f, 0.40821073f];
+    protected static readonly float[] Std = [0.26862954f, 0.26130258f, 0.27577711f];
 
     public async Task<float[]> ConvertAsync(Image<Rgb24> image)
     {
@@ -44,7 +44,7 @@ public class OnnxVectorConverter(
         return output;
     }
 
-    internal static DenseTensor<float> ConvertToTensor(Image<Rgb24> image, int size)
+    protected static DenseTensor<float> ConvertToTensor(Image<Rgb24> image, int size)
     {
         var tensor = new DenseTensor<float>([1, 3, size, size]);
         image.ProcessPixelRows(accessor =>
@@ -64,7 +64,7 @@ public class OnnxVectorConverter(
         return tensor;
     }
 
-    internal static void L2Normalize(float[] vector)
+    protected static void L2Normalize(float[] vector)
     {
         var sum = 0f;
         for (var i = 0; i < vector.Length; i++)

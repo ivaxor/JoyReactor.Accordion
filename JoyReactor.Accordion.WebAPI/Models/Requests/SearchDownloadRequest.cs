@@ -5,7 +5,7 @@ namespace JoyReactor.Accordion.WebAPI.Models.Requests;
 
 public record SearchDownloadRequest : IValidatableObject
 {
-    internal static readonly FrozenSet<string> BlacklistedHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected static readonly FrozenSet<string> BlacklistedHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "localhost",
         "lan",
