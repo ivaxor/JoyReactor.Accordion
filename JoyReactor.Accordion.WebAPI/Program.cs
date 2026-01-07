@@ -24,7 +24,7 @@ builder.AddInferenceSession();
 builder.AddRateLimiter();
 builder.AddHealthChecks();
 
-var userAgent = $"JoyReactor.Accordion/{Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3)} (Bot; +https://github.com/ivaxor/JoyReactor.Accordion)";
+var userAgent = $"JoyReactor.Accordion/{Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3)} (Bot; +https://github.com/ivaxor/joyreactor-accordion)";
 var socketsHttpHandler = new SocketsHttpHandler()
 {
     PooledConnectionLifetime = TimeSpan.FromMinutes(5),
