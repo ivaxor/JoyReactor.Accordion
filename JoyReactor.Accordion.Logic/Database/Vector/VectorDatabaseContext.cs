@@ -27,7 +27,7 @@ public class VectorDatabaseContext(
         await qdrantClient.UpsertAsync(settings.Value.CollectionName, points, cancellationToken: cancellationToken);
     }
 
-    public async Task<VectorSearchResult[]> SearchAsync(float[] vector, CancellationToken cancellationToken)
+    public async Task<PictureScoredPoint[]> SearchAsync(float[] vector, CancellationToken cancellationToken)
     {
         var results = await qdrantClient.SearchAsync(
             settings.Value.CollectionName,
@@ -37,7 +37,7 @@ public class VectorDatabaseContext(
             cancellationToken: cancellationToken);
 
         return results
-            .Select(result => new VectorSearchResult(result))
+            .Select(result => new PictureScoredPoint(result))
             .ToArray();
     }
 
@@ -59,5 +59,5 @@ public interface IVectorDatabaseContext
 {
     Task UpsertAsync(ParsedPostAttributePicture picture, float[] vector, CancellationToken cancellationToken);
     Task UpsertAsync(IDictionary<ParsedPostAttributePicture, float[]> pictureVectors, CancellationToken cancellationToken);
-    Task<VectorSearchResult[]> SearchAsync(float[] vector, CancellationToken cancellationToken);
+    Task<PictureScoredPoint[]> SearchAsync(float[] vector, CancellationToken cancellationToken);
 }

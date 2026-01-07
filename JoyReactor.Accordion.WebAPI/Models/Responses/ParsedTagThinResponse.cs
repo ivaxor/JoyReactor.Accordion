@@ -10,7 +10,6 @@ public record ParsedTagThinResponse
         Id = tag.Id;
         NumberId = tag.NumberId;
         Name = tag.Name;
-
     }
 
     public Guid Id { get; set; }

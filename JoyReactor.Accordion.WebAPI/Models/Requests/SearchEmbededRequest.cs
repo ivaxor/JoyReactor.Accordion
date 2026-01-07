@@ -2,17 +2,17 @@
 
 namespace JoyReactor.Accordion.WebAPI.Models.Requests;
 
-public record SearchTextRequest
+public record SearchEmbededRequest
 {
     [Required]
-    public SearchTextType Type { get; set; }
+    public SearchEmbeddedType Type { get; set; }
 
     [Required]
     [MaxLength(100)]
     public string Text { get; set; }
 }
 
-public enum SearchTextType
+public enum SearchEmbeddedType
 {
     BandCamp,
     Coub,

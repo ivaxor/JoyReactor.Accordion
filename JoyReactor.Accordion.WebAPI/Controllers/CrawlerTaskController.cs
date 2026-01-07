@@ -9,7 +9,7 @@ namespace JoyReactor.Accordion.WebAPI.Controllers;
 
 [Route("api/crawlerTasks")]
 [ApiController]
-public class CrawlerTasksController(SqlDatabaseContext sqlDatabaseContext)
+public class CrawlerTaskController(SqlDatabaseContext sqlDatabaseContext)
     : ControllerBase
 {
     [HttpGet]

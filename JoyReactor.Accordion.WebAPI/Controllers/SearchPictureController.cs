@@ -11,7 +11,7 @@ namespace JoyReactor.Accordion.WebAPI.Controllers;
 
 [Route("api/search/pictures")]
 [ApiController]
-public class SearchPicturesController(
+public class SearchPictureController(
     HttpClient httpClient,
     IImageReducer imageReducer,
     IOnnxVectorConverter onnxVectorConverter,
@@ -37,7 +37,7 @@ public class SearchPicturesController(
     }.ToFrozenSet();
 
     [HttpPost("download")]
-    public async Task<IActionResult> SearchPictureAsync([FromBody] SearchDownloadRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> SearchAsync([FromBody] SearchDownloadRequest request, CancellationToken cancellationToken = default)
     {
         using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, request.PictureUrl);
         if (request.PictureUrl.Host.Contains("joyreactor.cc", StringComparison.OrdinalIgnoreCase))
@@ -70,7 +70,7 @@ public class SearchPicturesController(
 
     [RequestSizeLimit(FileSizeLimit)]
     [HttpPost("upload")]
-    public async Task<IActionResult> SearchPictureAsync([FromForm] SearchUploadRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> SearchAsync([FromForm] SearchUploadRequest request, CancellationToken cancellationToken = default)
     {
         if (!AllowedMimeTypes.Contains(request.Picture.ContentType))
         {
@@ -90,7 +90,7 @@ public class SearchPicturesController(
         return Ok(results);
     }
 
-    protected async Task<VectorSearchResult[]> SearchAsync(Stream stream, CancellationToken cancellationToken)
+    protected async Task<PictureScoredPoint[]> SearchAsync(Stream stream, CancellationToken cancellationToken)
     {
         await using var boundedStream = new FileBufferingReadStream(stream, FileSizeLimit);
         await boundedStream.DrainAsync(cancellationToken);

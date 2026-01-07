@@ -42,7 +42,7 @@ builder.Services
     })
     .ConfigurePrimaryHttpMessageHandler(() => socketsHttpHandler);
 builder.Services
-    .AddHttpClient<SearchPicturesController>(httpClient =>
+    .AddHttpClient<SearchPictureController>(httpClient =>
     {
         httpClient.Timeout = TimeSpan.FromSeconds(10);
         httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
