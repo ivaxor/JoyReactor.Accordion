@@ -1,4 +1,5 @@
 ﻿
+using JoyReactor.Accordion.WebAPI.Models;
 using Microsoft.Extensions.Options;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;

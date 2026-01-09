@@ -1,4 +1,4 @@
-﻿namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
+﻿namespace JoyReactor.Accordion.WebAPI.Models;
 
 public record BackgroundServiceSettings
 {

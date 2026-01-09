@@ -9,14 +9,15 @@ using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Media.Images;
 using JoyReactor.Accordion.Logic.Onnx;
-using JoyReactor.Accordion.WebAPI.BackgroudServices;
 using JoyReactor.Accordion.WebAPI.HealthChecks;
+using JoyReactor.Accordion.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.ML.OnnxRuntime;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using Serilog;
+using System.Threading.RateLimiting;
 
 namespace JoyReactor.Accordion.WebAPI.Extensions;
 
@@ -55,6 +56,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.Configure<PostgreSqlSettings>(builder.Configuration.GetSection(nameof(PostgreSqlSettings)));
         builder.Services.Configure<QdrantSettings>(builder.Configuration.GetSection(nameof(QdrantSettings)));
         builder.Services.Configure<BackgroundServiceSettings>(builder.Configuration.GetSection(nameof(BackgroundServiceSettings)));
+        builder.Services.Configure<RateLimiterSettings>(builder.Configuration.GetSection(nameof(RateLimiterSettings)));
     }
 
     public static void AddGraphQlClient(this IHostApplicationBuilder builder)
@@ -132,21 +134,33 @@ public static class HostApplicationBuilderExtensions
 
     public static void AddRateLimiter(this IHostApplicationBuilder builder)
     {
-#if !DEBUG
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Request.Headers["X-Real-Ip"].FirstOrDefault() ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? httpContext.Connection.RemoteIpAddress.ToString(),
-            factory: partition => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+        if (builder.Environment.IsDevelopment())
+            return;
+
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
-                AutoReplenishment = true,
-                PermitLimit = 10,
-                QueueLimit = 0,
-                Window = TimeSpan.FromMinutes(1),
-            }));
-});
-#endif
+                var settings = httpContext.RequestServices.GetRequiredService<IOptions<RateLimiterSettings>>();
+
+                var realIp = httpContext.Request.Headers["X-Real-Ip"].FirstOrDefault();
+                var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString();
+
+                var partitionKey = realIp ?? forwardedFor ?? remoteIp ?? "unknown";
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey,
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = settings.Value.PermitLimit,
+                        QueueLimit = 0,
+                        Window = settings.Value.Window,
+                    });
+            });
+        });
     }
 
     public static void AddHealthChecks(this IHostApplicationBuilder builder)
