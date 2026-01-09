@@ -6,8 +6,9 @@ using JoyReactor.Accordion.Logic.Onnx;
 using JoyReactor.Accordion.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
@@ -34,7 +35,7 @@ public class PicturesWithoutVectorCrawler(
             await using var serviceScope = serviceScopeFactory.CreateAsyncScope();
             await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
             var imageDownloader = serviceScope.ServiceProvider.GetRequiredService<IImageDownloader>();
-            var oonxVectorConverter = serviceScope.ServiceProvider.GetRequiredService<IOnnxVectorConverter>();
+            var onnxVectorConverter = serviceScope.ServiceProvider.GetRequiredService<IOnnxVectorConverter>();
             var vectorDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<IVectorDatabaseContext>();
 
             unprocessedPictures = await sqlDatabaseContext.ParsedPostAttributePictures
@@ -51,46 +52,63 @@ public class PicturesWithoutVectorCrawler(
                 return;
             }
 
-            var totalStopwatch = Stopwatch.StartNew();
-            var totalDownloadStopwatch = new Stopwatch();
-            var totalVectorStopwatch = new Stopwatch();
             var pictureVectors = new ConcurrentDictionary<ParsedPostAttributePicture, float[]>();
-            foreach (var picture in unprocessedPictures)
+            foreach (var pictures in unprocessedPictures.Chunk(10))
             {
-                try
-                {
-                    totalDownloadStopwatch.Start();
-                    using var image = await imageDownloader.DownloadAsync(picture, cancellationToken);
-                    totalDownloadStopwatch.Stop();
+                var pictureImages = new ConcurrentDictionary<ParsedPostAttributePicture, Image<Rgb24>>();
+                await Task.WhenAll(pictures.Select(picture => DownloadImageAsync(imageDownloader, pictureImages, picture, cancellationToken)));
 
-                    totalVectorStopwatch.Start();
-                    var vector = await oonxVectorConverter.ConvertAsync(image);
-                    totalVectorStopwatch.Stop();
-
-                    if (pictureVectors.TryAdd(picture, vector))
-                    {
-                        picture.IsVectorCreated = true;
-                        picture.UpdatedAt = DateTime.UtcNow;
-                    }
-                }
-                catch (Exception ex)
+                foreach (var (picture, image) in pictureImages)
                 {
-                    logger.LogError(ex, "Failed to crawl {PictureAttributeId} picture without vector.", picture.AttributeId);
+                    await CreateVectorAsync(onnxVectorConverter, pictureVectors, picture, image);
                 }
             }
-            totalStopwatch.Stop();
 
             await vectorDatabaseContext.UpsertAsync(pictureVectors, cancellationToken);
             sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(pictureVectors.Keys);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
-
-            var avgDownloadTime = totalDownloadStopwatch.Elapsed / pictureVectors.Count();
-            var avgVectorTime = totalVectorStopwatch.Elapsed / pictureVectors.Count();
-            logger.LogInformation("Crawled {PicturesCount} pictures. Total time: {TotalTime}. Avg download time: {AvgDownloadTime}. Avg vector time: {AvgVectorTime}.",
-                pictureVectors.Count,
-                totalStopwatch.Elapsed,
-                avgDownloadTime,
-                avgVectorTime);
         } while (unprocessedPictures.Length != 0);
+    }
+
+    protected async Task DownloadImageAsync(
+        IImageDownloader imageDownloader,
+        IDictionary<ParsedPostAttributePicture, Image<Rgb24>> pictureImages,
+        ParsedPostAttributePicture picture,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var image = await imageDownloader.DownloadAsync(picture, cancellationToken);
+            pictureImages.TryAdd(picture, image);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to download {PictureAttributeId} picture", picture.AttributeId);
+        }
+    }
+
+    protected async Task CreateVectorAsync(
+        IOnnxVectorConverter onnxVectorConverter,
+        IDictionary<ParsedPostAttributePicture, float[]> pictureVectors,
+        ParsedPostAttributePicture picture,
+        Image<Rgb24> image)
+    {
+        try
+        {
+            var vector = await onnxVectorConverter.ConvertAsync(image);
+            if (pictureVectors.TryAdd(picture, vector))
+            {
+                picture.IsVectorCreated = true;
+                picture.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create vector for {PictureAttributeId} picture", picture.AttributeId);
+        }
+        finally
+        {
+            image?.Dispose();
+        }
     }
 }
