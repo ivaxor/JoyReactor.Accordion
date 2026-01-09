@@ -6,6 +6,8 @@ using JoyReactor.Accordion.Logic.Onnx;
 using JoyReactor.Accordion.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
@@ -49,26 +51,46 @@ public class PicturesWithoutVectorCrawler(
                 return;
             }
 
-            var pictureVectors = unprocessedPictures.ToDictionary(picture => picture, picture => (float[])null);
-            foreach (var picture in pictureVectors.Keys)
+            var totalStopwatch = Stopwatch.StartNew();
+            var totalDownloadStopwatch = new Stopwatch();
+            var totalVectorStopwatch = new Stopwatch();
+            var pictureVectors = new ConcurrentDictionary<ParsedPostAttributePicture, float[]>();
+            foreach (var picture in unprocessedPictures)
             {
                 try
                 {
+                    totalDownloadStopwatch.Start();
                     using var image = await imageDownloader.DownloadAsync(picture, cancellationToken);
-                    pictureVectors[picture] = await oonxVectorConverter.ConvertAsync(image);
+                    totalDownloadStopwatch.Stop();
 
-                    picture.IsVectorCreated = true;
-                    picture.UpdatedAt = DateTime.UtcNow;
+                    totalVectorStopwatch.Start();
+                    var vector = await oonxVectorConverter.ConvertAsync(image);
+                    totalVectorStopwatch.Stop();
+
+                    if (pictureVectors.TryAdd(picture, vector))
+                    {
+                        picture.IsVectorCreated = true;
+                        picture.UpdatedAt = DateTime.UtcNow;
+                    }
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Failed to crawl {PictureAttributeId} picture without vector.", picture.AttributeId);
                 }
             }
+            totalStopwatch.Stop();
 
             await vectorDatabaseContext.UpsertAsync(pictureVectors, cancellationToken);
-            sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(unprocessedPictures);
+            sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(pictureVectors.Keys);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
+
+            var avgDownloadTime = totalDownloadStopwatch.Elapsed / pictureVectors.Count();
+            var avgVectorTime = totalVectorStopwatch.Elapsed / pictureVectors.Count();
+            logger.LogInformation("Crawled {PicturesCount} pictures. Total time: {TotalTime}. Avg download time: {AvgDownloadTime}. Avg vector time: {AvgVectorTime}.",
+                pictureVectors.Count,
+                totalStopwatch.Elapsed,
+                avgDownloadTime,
+                avgVectorTime);
         } while (unprocessedPictures.Length != 0);
     }
 }

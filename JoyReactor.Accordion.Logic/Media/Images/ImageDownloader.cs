@@ -32,7 +32,7 @@ public class ImageDownloader(
             {
                 logger.LogWarning("Failed to send HTTP request to CDN. Attempt: {Attempt}/{MaxAttempts}. Message: {Message}. ", args.AttemptNumber, settings.Value.MaxRetryAttempts, args.Outcome.Exception?.Message);
                 return default;
-            }
+            },
         })
         .AddTimeout(TimeSpan.FromSeconds(10))
         .Build();

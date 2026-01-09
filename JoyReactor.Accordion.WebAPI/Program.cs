@@ -99,8 +99,8 @@ else
     //app.UseHsts();
 }
 
-app.UseRateLimiter();
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
