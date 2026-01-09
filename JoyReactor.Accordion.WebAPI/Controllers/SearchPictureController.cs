@@ -40,7 +40,8 @@ public class SearchPictureController(
     public async Task<IActionResult> SearchAsync([FromBody] SearchDownloadRequest request, CancellationToken cancellationToken = default)
     {
         using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, request.PictureUrl);
-        if (request.PictureUrl.Host.Contains("joyreactor.cc", StringComparison.OrdinalIgnoreCase))
+        var pictureUri = new Uri(request.PictureUrl);
+        if (pictureUri.Host.EndsWith("joyreactor.cc", StringComparison.OrdinalIgnoreCase))
             downloadRequest.Headers.Add("Referer", "https://joyreactor.cc");
 
         var downloadResponse = await httpClient.SendAsync(downloadRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);

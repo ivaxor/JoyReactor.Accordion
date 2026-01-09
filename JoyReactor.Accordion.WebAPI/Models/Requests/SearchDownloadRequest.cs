@@ -14,21 +14,19 @@ public record SearchDownloadRequest : IValidatableObject
     }.ToFrozenSet();
 
     [Required]
-    [MaxLength(100)]
-    public Uri PictureUrl { get; set; }
+    [MaxLength(500)]
+    public string PictureUrl { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (PictureUrl is not Uri)
-            yield return new ValidationResult("Invalid URL format");
-
-        if (!PictureUrl.IsAbsoluteUri)
+        var pictureUri = new Uri(PictureUrl);
+        if (!pictureUri.IsAbsoluteUri)
             yield return new ValidationResult("URL must be absolute");
 
-        if (PictureUrl.Scheme != Uri.UriSchemeHttps)
+        if (pictureUri.Scheme != Uri.UriSchemeHttps)
             yield return new ValidationResult("Only HTTPS protocol is allowed");
 
-        var host = PictureUrl.Host;
+        var host = pictureUri.Host;
         if (Uri.CheckHostName(host) is UriHostNameType.IPv4 or UriHostNameType.IPv6)
             yield return new ValidationResult("IP addresses are not allowed");
 
