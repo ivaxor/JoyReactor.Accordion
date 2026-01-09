@@ -14,6 +14,7 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
 public class PicturesWithoutVectorCrawler(
     IServiceScopeFactory serviceScopeFactory,
+    IOptions<ImageSettings> imageSettings,
     IOptions<BackgroundServiceSettings> settings,
     ILogger<PicturesWithoutVectorCrawler> logger)
     : RobustBackgroundService(settings, logger)
@@ -53,7 +54,7 @@ public class PicturesWithoutVectorCrawler(
             }
 
             var pictureVectors = new ConcurrentDictionary<ParsedPostAttributePicture, float[]>();
-            foreach (var pictures in unprocessedPictures.Chunk(10))
+            foreach (var pictures in unprocessedPictures.Chunk(imageSettings.Value.ConcurrentDownloads))
             {
                 var pictureImages = new ConcurrentDictionary<ParsedPostAttributePicture, Image<Rgb24>>();
                 await Task.WhenAll(pictures.Select(picture => DownloadImageAsync(imageDownloader, pictureImages, picture, cancellationToken)));
