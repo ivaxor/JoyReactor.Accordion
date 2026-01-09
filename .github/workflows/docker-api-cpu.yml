@@ -3,8 +3,18 @@ name: Build and Push API CPU-only Docker image
 on:
   push:
     branches: [ "master" ]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE.txt'
+      - 'JoyReactor.Accordion.Web/**'
+      - 'JoyReactor.Accordion.Tests/**'
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE.txt'
+      - 'JoyReactor.Accordion.Web/**'
+      - 'JoyReactor.Accordion.Tests/**'
 
 jobs:
   build-and-push:
