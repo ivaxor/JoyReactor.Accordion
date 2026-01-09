@@ -75,6 +75,9 @@ public class ParsedPostAttributeEmbeddedEntityTypeConfiguration : IEntityTypeCon
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
+            .HasIndex(e => e.BandCampId)
+            .IsUnique(false);
+        builder
             .HasOne(e => e.BandCamp)
             .WithOne(e => e.PostAttributeEmbedded)
             .HasPrincipalKey<ParsedBandCamp>(e => e.Id)
@@ -82,6 +85,9 @@ public class ParsedPostAttributeEmbeddedEntityTypeConfiguration : IEntityTypeCon
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder
+            .HasIndex(e => e.CoubId)
+            .IsUnique(false);
         builder
             .HasOne(e => e.Coub)
             .WithOne(e => e.PostAttributeEmbedded)
@@ -91,6 +97,9 @@ public class ParsedPostAttributeEmbeddedEntityTypeConfiguration : IEntityTypeCon
             .IsRequired(false);
 
         builder
+            .HasIndex(e => e.SoundCloudId)
+            .IsUnique(false);
+        builder
             .HasOne(e => e.SoundCloud)
             .WithOne(e => e.PostAttributeEmbedded)
             .HasPrincipalKey<ParsedSoundCloud>(e => e.Id)
@@ -99,6 +108,9 @@ public class ParsedPostAttributeEmbeddedEntityTypeConfiguration : IEntityTypeCon
             .IsRequired(false);
 
         builder
+            .HasIndex(e => e.VimeoId)
+            .IsUnique(false);
+        builder
             .HasOne(e => e.Vimeo)
             .WithOne(e => e.PostAttributeEmbedded)
             .HasPrincipalKey<ParsedVimeo>(e => e.Id)
@@ -106,6 +118,9 @@ public class ParsedPostAttributeEmbeddedEntityTypeConfiguration : IEntityTypeCon
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder
+            .HasIndex(e => e.YouTubeId)
+            .IsUnique(false);
         builder
             .HasOne(e => e.YouTube)
             .WithOne(e => e.PostAttributeEmbedded)
