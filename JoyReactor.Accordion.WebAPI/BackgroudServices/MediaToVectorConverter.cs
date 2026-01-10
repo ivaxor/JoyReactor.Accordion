@@ -24,6 +24,7 @@ public class MediaToVectorConverter(
     protected static readonly ParsedPostAttributePictureType[] ImageTypes = [
         ParsedPostAttributePictureType.PNG,
         ParsedPostAttributePictureType.JPEG,
+        ParsedPostAttributePictureType.GIF,
         ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
         //ParsedPostAttributePictureType.MP4,
