@@ -32,18 +32,10 @@ public class PostParser(
                 .ToDictionaryAsync(post => post.NumberId, post => post.ContentVersion, cancellationToken);
             foreach (var post in posts)
             {
-                if (existingPostContentVersions.TryGetValue(post.NumberId, out var contentVersion))
+                if (existingPostContentVersions.TryGetValue(post.NumberId, out var contentVersion) && post.ContentVersion != contentVersion)
                 {
-                    if (post.ContentVersion == contentVersion)
-                    {
-                        logger.LogInformation("Post {PostNumberId} content version change didn't changed. Skipping post.", post.NumberId);
-                        continue;
-                    }
-                    else
-                    {
-                        logger.LogInformation("Post {PostNubmerId} content version changed. Deleting old post information.", post.NumberId);
-                        await sqlDatabaseContext.ParsedPosts.Where(p => p.NumberId == post.NumberId).ExecuteDeleteAsync(cancellationToken);
-                    }
+                    logger.LogInformation("Post {PostNubmerId} content version changed. Deleting old post information.", post.NumberId);
+                    await sqlDatabaseContext.ParsedPosts.Where(p => p.NumberId == post.NumberId).ExecuteDeleteAsync(cancellationToken);
                 }
             }
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
@@ -53,6 +45,12 @@ public class PostParser(
             var parsedAttributeEmbeds = new List<IParsedAttributeEmbedded>();
             foreach (var post in posts)
             {
+                if (existingPostContentVersions.TryGetValue(post.NumberId, out var contentVersion) && post.ContentVersion == contentVersion)
+                {
+                    logger.LogInformation("Post {PostNumberId} content version change didn't changed. Skipping post.", post.NumberId);
+                    continue;
+                }
+
                 var parsedPost = new ParsedPost(post);
                 parsedPosts.Add(parsedPost);
 
