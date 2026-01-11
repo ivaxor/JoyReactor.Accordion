@@ -6,11 +6,11 @@ using Qdrant.Client.Grpc;
 
 namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 
-public class VectorDatabaseNormalizationJob(
+public class VectorNormalizator(
     IServiceScopeFactory serviceScopeFactory,
     IOptions<QdrantSettings> qdrantSettings,
     IOptions<BackgroundServiceSettings> settings,
-    ILogger<VectorDatabaseNormalizationJob> logger)
+    ILogger<VectorNormalizator> logger)
     : RobustBackgroundService(settings, logger)
 {
     protected override bool IsIndefinite => true;
@@ -27,7 +27,7 @@ public class VectorDatabaseNormalizationJob(
             var updatedPoints = new List<PointStruct>();
             scrollResponse = await qdrantClient.ScrollAsync(
                 collectionName: qdrantSettings.Value.CollectionName,
-                limit: 1000,
+                limit: 10000,
                 filter: new Filter
                 {
                     Should = {
@@ -41,6 +41,7 @@ public class VectorDatabaseNormalizationJob(
                 cancellationToken: cancellationToken);
             scrollOffset = scrollResponse.NextPageOffset;
 
+            logger.LogInformation("Normalizing {VectorCount} vector payloads.", scrollResponse.Result.Count);
             foreach (var scrollPoint in scrollResponse.Result)
             {
                 var isUpdated = false;
