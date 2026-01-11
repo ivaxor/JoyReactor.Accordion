@@ -56,6 +56,7 @@ builder.Services.AddHostedService<TagSubTagsCrawler>();
 builder.Services.AddHostedService<MediaToVectorConverter>();
 builder.Services.AddHostedService<CrawlerTaskHandler>();
 builder.Services.AddHostedService<ParsedPostAttributePictureImageTypeFixer>();
+builder.Services.AddHostedService<VectorDatabaseNormalizationJob>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

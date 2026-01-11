@@ -4,6 +4,7 @@ using JoyReactor.Accordion.Logic.Extensions;
 using Microsoft.Extensions.Options;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using System.Globalization;
 
 namespace JoyReactor.Accordion.Logic.Database.Vector;
 
@@ -27,14 +28,19 @@ public class VectorDatabaseContext(
         await qdrantClient.UpsertAsync(settings.Value.CollectionName, points, cancellationToken: cancellationToken);
     }
 
-    public async Task<PictureScoredPoint[]> SearchAsync(float[] vector, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ScoredPoint>> SearchRawAsync(float[] vector, CancellationToken cancellationToken)
     {
-        var results = await qdrantClient.SearchAsync(
+        return await qdrantClient.SearchAsync(
             settings.Value.CollectionName,
             vector,
             limit: settings.Value.SearchLimit,
             scoreThreshold: settings.Value.SearchScoreThreshold,
             cancellationToken: cancellationToken);
+    }
+
+    public async Task<PictureScoredPoint[]> SearchAsync(float[] vector, CancellationToken cancellationToken)
+    {
+        var results = await SearchRawAsync(vector, cancellationToken);
 
         return results
             .Select(result => new PictureScoredPoint(result))
@@ -46,6 +52,17 @@ public class VectorDatabaseContext(
         return await qdrantClient.CountAsync(settings.Value.CollectionName, cancellationToken: cancellationToken);
     }
 
+    public async Task<ScrollResponse> ScrollAsync(PointId? offset, bool includeVectors, bool includePayload, CancellationToken cancellationToken)
+    {
+        return await qdrantClient.ScrollAsync(
+            collectionName: settings.Value.CollectionName,
+            limit: 100,
+            offset: offset,
+            vectorsSelector: includeVectors,
+            payloadSelector: includePayload,
+            cancellationToken: cancellationToken);
+    }
+
     protected static PointStruct CreatePointStruct(ParsedPostAttributePicture picture, float[] vector)
     {
         return new PointStruct
@@ -53,8 +70,9 @@ public class VectorDatabaseContext(
             Id = Guid.NewGuid(),
             Vectors = vector,
             Payload = {
-                ["postIds"] = new string[] { picture.PostId.ToInt().ToString() },
-                ["attributeIds"] = new string[] { picture.AttributeId.ToString() },
+                ["postId"] = new Value() { IntegerValue =  picture.PostId.ToInt() },
+                ["postAttributeId"] = new Value() { IntegerValue = picture.AttributeId },
+                ["createdAt"] = new Value() { StringValue = picture.CreatedAt.ToString("o", CultureInfo.InvariantCulture) },
             },
         };
     }
@@ -64,6 +82,8 @@ public interface IVectorDatabaseContext
 {
     Task UpsertAsync(ParsedPostAttributePicture picture, float[] vector, CancellationToken cancellationToken);
     Task UpsertAsync(IDictionary<ParsedPostAttributePicture, float[]> pictureVectors, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ScoredPoint>> SearchRawAsync(float[] vector, CancellationToken cancellationToken);
     Task<PictureScoredPoint[]> SearchAsync(float[] vector, CancellationToken cancellationToken);
     Task<ulong> CountAsync(CancellationToken cancellationToken);
+    Task<ScrollResponse> ScrollAsync(PointId? offset, bool includeVectors, bool includePayload, CancellationToken cancellationToken);
 }

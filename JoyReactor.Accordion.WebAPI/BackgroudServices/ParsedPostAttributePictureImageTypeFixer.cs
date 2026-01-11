@@ -14,7 +14,7 @@ public class ParsedPostAttributePictureImageTypeFixer(
     ILogger<ParsedPostAttributePictureImageTypeFixer> logger)
     : RobustBackgroundService(settings, logger)
 {
-    protected override bool IsIndefinite => false;
+    protected override bool IsIndefinite => true;
 
     protected override async Task RunAsync(CancellationToken cancellationToken)
     {
