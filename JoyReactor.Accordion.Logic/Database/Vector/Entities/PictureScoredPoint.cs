@@ -18,8 +18,8 @@ public record PictureScoredPoint
             ? Convert.ToInt32(postAttributeId.IntegerValue)
             : null;
 
-        CommentId = scoredPoint.Payload.TryGetValue("commentId", out var commentIdValue) && postIdValue.KindCase == Value.KindOneofCase.IntegerValue
-            ? Convert.ToInt32(postIdValue.IntegerValue)
+        CommentId = scoredPoint.Payload.TryGetValue("commentId", out var commentIdValue) && commentIdValue.KindCase == Value.KindOneofCase.IntegerValue
+            ? Convert.ToInt32(commentIdValue.IntegerValue)
             : null;
 
         CommentAttributeId = scoredPoint.Payload.TryGetValue("commentAttributeId", out var commentAttributeIdValue) && commentAttributeIdValue.KindCase == Value.KindOneofCase.IntegerValue
