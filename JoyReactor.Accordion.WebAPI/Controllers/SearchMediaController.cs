@@ -1,10 +1,13 @@
 ﻿using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Database.Vector.Entities;
+using JoyReactor.Accordion.Logic.Database.Vector.Extensions;
 using JoyReactor.Accordion.Logic.Media;
 using JoyReactor.Accordion.Logic.Onnx;
 using JoyReactor.Accordion.WebAPI.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using Qdrant.Client;
 using System.Collections.Frozen;
 
 namespace JoyReactor.Accordion.WebAPI.Controllers;
@@ -15,7 +18,8 @@ public class SearchMediaController(
     HttpClient httpClient,
     IMediaReducer mediaReducer,
     IOnnxVectorConverter onnxVectorConverter,
-    IVectorDatabaseContext vectorDatabaseContext)
+    IQdrantClient qdrantClient,
+    IOptions<QdrantSettings> qdrantSettings)
     : ControllerBase
 {
     protected const int FileSizeLimit = 5 * 1024 * 1024;
@@ -105,7 +109,7 @@ public class SearchMediaController(
 
         using var processedImage = await mediaReducer.ReduceAsync(mimeType, boundedStream, cancellationToken);
         var vector = await onnxVectorConverter.ConvertAsync(processedImage);
-        var results = await vectorDatabaseContext.SearchAsync(vector, cancellationToken);
+        var results = await qdrantClient.SearchAsync(qdrantSettings.Value.CollectionName, qdrantSettings.Value.SearchLimit, qdrantSettings.Value.SearchScoreThreshold, vector, cancellationToken);
 
         return results;
     }

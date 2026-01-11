@@ -169,7 +169,7 @@ public static class HostApplicationBuilderExtensions
     {
         builder.Services
             .AddHealthChecks()
-            .AddDbContextCheck<SqlDatabaseContext>(nameof(SqlDatabaseContext))
-            .AddCheck<VectorDatabaseContextHealthCheck>(nameof(VectorDatabaseContext));
+            .AddDbContextCheck<SqlDatabaseContext>("SqlDatabase")
+            .AddCheck<VectorDatabaseContextHealthCheck>("VectorDatabase");
     }
 }

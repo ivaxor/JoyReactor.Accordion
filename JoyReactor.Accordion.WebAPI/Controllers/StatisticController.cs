@@ -1,8 +1,11 @@
 ﻿using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Vector;
+using JoyReactor.Accordion.Logic.Database.Vector.Extensions;
 using JoyReactor.Accordion.WebAPI.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Qdrant.Client;
 
 namespace JoyReactor.Accordion.WebAPI.Controllers;
 
@@ -10,7 +13,8 @@ namespace JoyReactor.Accordion.WebAPI.Controllers;
 [ApiController]
 public class StatisticController(
     SqlDatabaseContext sqlDatabaseContext,
-    IVectorDatabaseContext vectorDatabaseContext)
+    IQdrantClient qdrantClient,
+    IOptions<QdrantSettings> qdrantSettings)
     : ControllerBase
 {
     [HttpGet]
@@ -18,7 +22,7 @@ public class StatisticController(
     public async Task<IActionResult> GetAsync(CancellationToken cancellationToken = default)
     {
         var response = new StatisticsResponse();
-        response.Vectors = Convert.ToInt32(await vectorDatabaseContext.CountAsync(cancellationToken));
+        response.Vectors = Convert.ToInt32(await qdrantClient.CountAsync(qdrantSettings.Value.CollectionName, cancellationToken));
 
         response.ParsedTags = await sqlDatabaseContext.ParsedTags.CountAsync(cancellationToken);
         response.EmptyTags = await sqlDatabaseContext.EmptyTags.CountAsync(cancellationToken);

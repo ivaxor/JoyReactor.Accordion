@@ -43,8 +43,8 @@ public class MediaDownloader(
         ParsedPostAttributePictureType.GIF,
         ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
-        //ParsedPostAttributePictureType.MP4,
-        //ParsedPostAttributePictureType.WEBM,
+        ParsedPostAttributePictureType.MP4,
+        ParsedPostAttributePictureType.WEBM,
     }.ToFrozenSet();
 
     protected static readonly FrozenDictionary<ParsedPostAttributePictureType, string> PictureTypeToExtensions = PictureTypes
@@ -58,8 +58,8 @@ public class MediaDownloader(
         "image/gif",
         "image/bmp",
         "image/tiff",
-        //"image/mp4",
-        //"image/webm",
+        "image/mp4",
+        "image/webm",
     }.ToFrozenSet();
 
     public async Task<Image<Rgb24>> DownloadAsync(ParsedPostAttributePicture picture, CancellationToken cancellationToken)

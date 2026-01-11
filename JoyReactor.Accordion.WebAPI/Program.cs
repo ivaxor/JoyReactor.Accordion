@@ -1,6 +1,5 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient;
 using JoyReactor.Accordion.Logic.Crawlers;
-using JoyReactor.Accordion.Logic.Database.Vector;
 using JoyReactor.Accordion.Logic.Media;
 using JoyReactor.Accordion.Logic.Onnx;
 using JoyReactor.Accordion.Logic.Parsers;
@@ -47,7 +46,6 @@ builder.Services.AddSingleton<IPostClient, PostClient>();
 builder.Services.AddScoped<IPostParser, PostParser>();
 builder.Services.AddSingleton<IMediaReducer, MediaReducer>();
 builder.Services.AddSingleton<IOnnxVectorConverter, OnnxVectorConverter>();
-builder.Services.AddSingleton<IVectorDatabaseContext, VectorDatabaseContext>();
 
 builder.Services.AddHostedService<MainTagsCrawler>();
 builder.Services.AddHostedService<TagInnnerRangeCrawler>();

@@ -1,11 +1,13 @@
 ﻿using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using JoyReactor.Accordion.Logic.Database.Vector;
+using JoyReactor.Accordion.Logic.Database.Vector.Extensions;
 using JoyReactor.Accordion.Logic.Media;
 using JoyReactor.Accordion.Logic.Onnx;
 using JoyReactor.Accordion.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Qdrant.Client;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Collections.Concurrent;
@@ -15,6 +17,7 @@ namespace JoyReactor.Accordion.WebAPI.BackgroudServices;
 public class MediaToVectorConverter(
     IServiceScopeFactory serviceScopeFactory,
     IOptions<MediaSettings> mediaSettings,
+    IOptions<QdrantSettings> qdrantSettings,
     IOptions<BackgroundServiceSettings> settings,
     ILogger<MediaToVectorConverter> logger)
     : RobustBackgroundService(settings, logger)
@@ -22,13 +25,15 @@ public class MediaToVectorConverter(
     protected override bool IsIndefinite => true;
 
     protected static readonly ParsedPostAttributePictureType[] ImageTypes = [
+        /*
         ParsedPostAttributePictureType.PNG,
         ParsedPostAttributePictureType.JPEG,
         ParsedPostAttributePictureType.GIF,
         ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
-        //ParsedPostAttributePictureType.MP4,
-        //ParsedPostAttributePictureType.WEBM,
+        */
+        ParsedPostAttributePictureType.MP4,
+        ParsedPostAttributePictureType.WEBM,
     ];
 
     protected override async Task RunAsync(CancellationToken cancellationToken)
@@ -42,7 +47,7 @@ public class MediaToVectorConverter(
             await using var sqlDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<SqlDatabaseContext>();
             var mediaDownloader = serviceScope.ServiceProvider.GetRequiredService<IMediaDownloader>();
             var onnxVectorConverter = serviceScope.ServiceProvider.GetRequiredService<IOnnxVectorConverter>();
-            var vectorDatabaseContext = serviceScope.ServiceProvider.GetRequiredService<IVectorDatabaseContext>();
+            var qdrantClient = serviceScope.ServiceProvider.GetRequiredService<IQdrantClient>();
 
             unprocessedPictures = await sqlDatabaseContext.ParsedPostAttributePictures
                 .Where(picture => picture.IsVectorCreated == false)
@@ -73,7 +78,7 @@ public class MediaToVectorConverter(
                 logger.LogInformation("Chunk of {PicturesCount} picture post attributes were converted to vectors.", pictures.Length);
             }
 
-            await vectorDatabaseContext.UpsertAsync(pictureVectors, cancellationToken);
+            await qdrantClient.UpsertAsync(qdrantSettings.Value.CollectionName, pictureVectors, cancellationToken);
             sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(pictureVectors.Keys);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
 

@@ -1,7 +1,7 @@
 ﻿using JoyReactor.Accordion.Logic.Database.Sql.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace JoyReactor.Accordion.Logic.Extensions;
+namespace JoyReactor.Accordion.Logic.Database.Sql.Extensions;
 
 public static class DbSetExtensions
 {

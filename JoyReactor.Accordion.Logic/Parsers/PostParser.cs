@@ -1,7 +1,7 @@
 ﻿using JoyReactor.Accordion.Logic.ApiClient.Models;
 using JoyReactor.Accordion.Logic.Database.Sql;
 using JoyReactor.Accordion.Logic.Database.Sql.Entities;
-using JoyReactor.Accordion.Logic.Extensions;
+using JoyReactor.Accordion.Logic.Database.Sql.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace JoyReactor.Accordion.Logic.Parsers;
