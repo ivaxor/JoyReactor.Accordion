@@ -36,7 +36,7 @@ public class TagSubTagsCrawler(
                 logger.LogInformation("No tags without sub tags found. Will try again later.");
                 continue;
             }
-            logger.LogInformation("Crawling {TagsCount} tags for new sub tags.", tagsWithEmptySubTags.Count());
+            logger.LogInformation("Crawling {TagsCount} tag(s) for new sub tags.", tagsWithEmptySubTags.Count());
 
             foreach (var parsedTag in tagsWithEmptySubTags)
                 await tagCrawler.CrawlSubTagsAsync(parsedTag.NumberId, cancellationToken);

@@ -41,7 +41,7 @@ public class VectorNormalizator(
                 cancellationToken: cancellationToken);
             scrollOffset = scrollResponse.NextPageOffset;
 
-            logger.LogInformation("Normalizing {VectorCount} vector payloads.", scrollResponse.Result.Count);
+            logger.LogInformation("Normalizing {VectorCount} vector payload(s).", scrollResponse.Result.Count);
             foreach (var scrollPoint in scrollResponse.Result)
             {
                 var isUpdated = false;
@@ -76,7 +76,7 @@ public class VectorNormalizator(
                 collectionName: qdrantSettings.Value.CollectionName,
                 points: updatedPoints,
                 cancellationToken: cancellationToken);
-            logger.LogInformation("Normalized {VectorCount} vector payloads.", updatedPoints.Count);
+            logger.LogInformation("Normalized {VectorCount} vector payload(s).", updatedPoints.Count);
         } while (scrollResponse.Result.Count != 0 && scrollResponse.NextPageOffset != null);
     }
 }

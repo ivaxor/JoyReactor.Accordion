@@ -44,7 +44,7 @@ public class VectorPostDuplicateRemover(
                 cancellationToken: cancellationToken);
             scrollOffset = scrollResponse.NextPageOffset;
 
-            logger.LogInformation("Checking {VectorCount} vectors for duplicates.", scrollResponse.Result.Count);
+            logger.LogInformation("Checking {VectorCount} vector(s) for duplicates.", scrollResponse.Result.Count);
             foreach (var scrollPoint in scrollResponse.Result)
             {
                 var postId = Convert.ToInt32(scrollPoint.Payload["postId"].IntegerValue);

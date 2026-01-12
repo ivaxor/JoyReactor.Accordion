@@ -35,7 +35,7 @@ public class MainTagsCrawler(
             logger.LogInformation("No new main category tags found.");
             return;
         }
-        logger.LogInformation("Crawling {TagsCount} main category tags.", nonExistingMainTagNames.Count());
+        logger.LogInformation("Crawling {TagsCount} main category tag(s).", nonExistingMainTagNames.Count());
 
         foreach (var tagName in nonExistingMainTagNames)
             await tagCrawler.CrawlAsync(tagName, cancellationToken);

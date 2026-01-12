@@ -63,7 +63,7 @@ public class MediaToVectorConverter(
                 logger.LogInformation("No post attribute pictures without vector found. Will try again later.");
                 return;
             }
-            logger.LogInformation("Starting crawling {PicturesCount} post attribute pictures without vectors.", unprocessedPictures.Length);
+            logger.LogInformation("Starting crawling {PicturesCount} post attribute picture(s) without vectors.", unprocessedPictures.Length);
 
             var pictureVectors = new ConcurrentDictionary<ParsedPostAttributePicture, float[]>();
             foreach (var pictures in unprocessedPictures.Chunk(mediaSettings.Value.ConcurrentDownloads))
@@ -76,14 +76,14 @@ public class MediaToVectorConverter(
                     await CreateVectorAsync(onnxVectorConverter, failedPictureAttributeIds, pictureVectors, picture, image);
                 }
 
-                logger.LogInformation("Chunk of {PicturesCount} picture post attributes were converted to vectors.", pictures.Length);
+                logger.LogInformation("Chunk of {PicturesCount} picture post attribute(s) were converted to vectors.", pictures.Length);
             }
 
             await qdrantClient.UpsertAsync(qdrantSettings.Value.CollectionName, pictureVectors, cancellationToken);
             sqlDatabaseContext.ParsedPostAttributePictures.UpdateRange(pictureVectors.Keys);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("{PicturesCount} picture post attributes were converted and saved as vectors.", pictureVectors.Count);
+            logger.LogInformation("{PicturesCount} picture post attribute(s) were converted and saved as vectors.", pictureVectors.Count);
         } while (unprocessedPictures.Length != 0);
     }
 
