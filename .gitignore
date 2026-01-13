@@ -367,3 +367,4 @@ FodyWeavers.xsd
 
 # Development secrets & configuration
 appsettings.Development.json
+JoyReactor.Accordion.Web/public/config.development.json
