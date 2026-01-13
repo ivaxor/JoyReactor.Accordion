@@ -1,11 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, inject, Injectable } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { isIP } from 'is-ip';
-import { SearchDownloadRequest } from '../search-download-request';
-import { SearchResponse } from '../search-response';
-
+import { SearchService } from '../../services/search-service/search-service';
 @Component({
   selector: 'app-search-picture',
   imports: [CommonModule, FormsModule],
@@ -13,9 +10,7 @@ import { SearchResponse } from '../search-response';
   styleUrl: './search-picture.scss',
 })
 export class SearchPicture {
-  @Injectable({ providedIn: 'root' })
-  private http = inject(HttpClient);
-
+  private searchService = inject(SearchService);
   url: string = "";
 
   onModelChange(url: string): void {
@@ -23,12 +18,8 @@ export class SearchPicture {
   }
 
   search(): void {
-    const request: SearchDownloadRequest = {
-      pictureUrl: this.url,
-    };
-
-    this.http.post<SearchResponse[]>("http://127.0.0.1:5288/search/pictures/download", request)
-      .subscribe(response => console.log(response), err => console.error(err));
+    this.searchService.searchMediaByUrl(this.url)
+      .subscribe(v => console.log(v), e => console.error(e));
   }
 
   isUrlValid(): boolean {
