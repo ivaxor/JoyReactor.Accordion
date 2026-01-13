@@ -1,45 +1,52 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, Injectable } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { isIP } from 'is-ip';
+import { SearchDownloadRequest } from '../search-download-request';
+import { SearchResponse } from '../search-response';
 
 @Component({
   selector: 'app-search-picture',
-  imports: [],
+  imports: [CommonModule, FormsModule],
   templateUrl: './search-picture.html',
   styleUrl: './search-picture.scss',
 })
 export class SearchPicture {
-  @Output() fileSelected = new EventEmitter<File>();
+  @Injectable({ providedIn: 'root' })
+  private http = inject(HttpClient);
 
-  isDragging = false;
+  url: string = "";
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.fileSelected.emit(input.files[0]);
-    }
+  onModelChange(url: string): void {
+    this.url = decodeURIComponent(url);
   }
 
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = true;
+  search(): void {
+    const request: SearchDownloadRequest = {
+      pictureUrl: this.url,
+    };
+
+    this.http.post<SearchResponse[]>("http://127.0.0.1:5288/search/pictures/download", request)
+      .subscribe(response => console.log(response), err => console.error(err));
   }
 
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = false;
-  }
+  isUrlValid(): boolean {
+    try {
+      const url = new URL(this.url);
 
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = false;
+      if (url.protocol !== 'https:')
+        return false;
 
-    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-      const file = event.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        this.fileSelected.emit(file);
-      }
+      if (!url.host.includes('.'))
+        return false;
+
+      if (isIP(url.host))
+        return false;
+
+      return true;
+    } catch {
+      return false;
     }
   }
 }
