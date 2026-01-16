@@ -27,7 +27,6 @@ public class CrawlerTaskHandler(
 
         var crawlerTasks = await sqlDatabaseContext.CrawlerTasks
             .AsNoTracking()
-            .Where(crawlerTask => crawlerTask.IsCompleted == false)
             .ToDictionaryAsync(crawlerTask => crawlerTask.Id, crawlerTask => crawlerTask, cancellationToken);
 
         var completedTasks = TaskWithCancellationTokenSources
@@ -77,35 +76,29 @@ public class CrawlerTaskHandler(
             var crawlerTask = await sqlDatabaseContext.CrawlerTasks
                 .Include(c => c.Tag)
                 .FirstAsync(c => c.Id == crawlerTaskId, cancellationToken);
-            crawlerTask.PageFrom ??= 1;
-            crawlerTask.PageCurrent ??= crawlerTask.PageFrom;
             crawlerTask.StartedAt = DateTime.UtcNow;
             crawlerTask.UpdatedAt = DateTime.UtcNow;
             sqlDatabaseContext.CrawlerTasks.Update(crawlerTask);
             await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
 
             var postPager = (PostPager)null;
-            var lastPage = 0;
             var isLastPage = false;
             do
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var tagNumberId = crawlerTask.TagId.ToInt();
-                postPager = await postClient.GetByTagAsync(tagNumberId, crawlerTask.PostLineType, crawlerTask.PageCurrent.Value, cancellationToken);
-                lastPage = crawlerTask.PageTo ?? postPager.LastPage;
-                isLastPage = crawlerTask.PageCurrent >= lastPage;
+                postPager = await postClient.GetByTagAsync(tagNumberId, crawlerTask.PostLineType, crawlerTask.PageCurrent, cancellationToken);                
+                isLastPage = crawlerTask.PageCurrent >= postPager.LastPage;
 
-                logger.LogInformation("Found {PostCount} post(s) using \"{TagName}\" tag on {Page}/{LastPage} page.", postPager.Posts.Length, crawlerTask.Tag.Name, crawlerTask.PageCurrent, lastPage);
+                logger.LogInformation("Found {PostCount} post(s) using \"{TagName}\" tag on {Page}/{PageLast} page.", postPager.Posts.Length, crawlerTask.Tag.Name, crawlerTask.PageCurrent, postPager.LastPage);
                 await postParser.ParseAsync(postPager.Posts, cancellationToken);
 
-                if (!isLastPage)
-                    crawlerTask.PageCurrent += 1;
-                else
-                {
-                    crawlerTask.IsCompleted = !crawlerTask.IsIndefinite;
+                if (isLastPage)
                     crawlerTask.FinishedAt = DateTime.UtcNow;
-                }
+                else
+                    crawlerTask.PageCurrent += 1;
+                crawlerTask.PageLast = postPager.LastPage;
                 crawlerTask.UpdatedAt = DateTime.UtcNow;
                 sqlDatabaseContext.CrawlerTasks.Update(crawlerTask);
                 await sqlDatabaseContext.SaveChangesAsync(cancellationToken);

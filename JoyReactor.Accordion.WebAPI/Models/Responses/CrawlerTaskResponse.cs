@@ -11,11 +11,8 @@ public record CrawlerTaskResponse
         Id = crawlerTask.Id;
         Tag = new ParsedTagThinResponse(crawlerTask.Tag);
         PostLineType = crawlerTask.PostLineType;
-        PageFrom = crawlerTask.PageFrom;
-        PageTo = crawlerTask.PageTo;
         PageCurrent = crawlerTask.PageCurrent;
-        IsIndefinite = crawlerTask.IsIndefinite;
-        IsCompleted = crawlerTask.IsCompleted;
+        PageLast = crawlerTask.PageLast;        
         StartedAt = crawlerTask.StartedAt;
         FinishedAt = crawlerTask.FinishedAt;
         CreatedAt = crawlerTask.CreatedAt;
@@ -26,12 +23,10 @@ public record CrawlerTaskResponse
     public ParsedTagThinResponse Tag { get; set; }
 
     public PostLineType PostLineType { get; set; }
-    public int? PageFrom { get; set; }
-    public int? PageTo { get; set; }
-    public int? PageCurrent { get; set; }
 
-    public bool IsIndefinite { get; set; }
-    public bool IsCompleted { get; set; }
+    public int PageCurrent { get; set; }
+    public int? PageLast { get; set; }
+
     public DateTime? StartedAt { get; set; }
     public DateTime? FinishedAt { get; set; }
 

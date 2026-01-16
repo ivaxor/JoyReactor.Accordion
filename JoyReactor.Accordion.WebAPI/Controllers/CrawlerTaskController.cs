@@ -46,11 +46,9 @@ public class CrawlerTaskController(
 
         var crawlerTask = new CrawlerTask()
         {
-            IsIndefinite = request.IsIndefinite,
             TagId = tag.Id,
             PostLineType = request.PostLineType,
-            PageFrom = request.PageFrom,
-            PageTo = request.PageTo,
+            PageCurrent = request.PageFrom,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };

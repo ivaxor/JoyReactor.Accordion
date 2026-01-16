@@ -12,12 +12,9 @@ public record CrawlerTask : ISqlUpdatedAtEntity
     public virtual ParsedTag? Tag { get; set; }
 
     public PostLineType PostLineType { get; set; }
-    public int? PageFrom { get; set; }
-    public int? PageTo { get; set; }
-    public int? PageCurrent { get; set; }
+    public int PageCurrent { get; set; }
+    public int? PageLast { get; set; }
 
-    public bool IsIndefinite { get; set; }
-    public bool IsCompleted { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? FinishedAt { get; set; }
 
@@ -41,24 +38,13 @@ public class CrawlerTaskEntityTypeConfiguration : IEntityTypeConfiguration<Crawl
             .IsRequired(true);
 
         builder
-            .Property(e => e.PageFrom)
-            .IsRequired(false);
-
-        builder
-            .Property(e => e.PageTo)
-            .IsRequired(false);
-
-        builder
             .Property(e => e.PageCurrent)
+            .HasDefaultValue(1)
+            .IsRequired(true);
+
+        builder
+            .Property(e => e.PageLast)
             .IsRequired(false);
-
-        builder
-            .Property(e => e.IsIndefinite)
-            .IsRequired(true);
-
-        builder
-            .Property(e => e.IsCompleted)
-            .IsRequired(true);
 
         builder
            .Property(e => e.StartedAt)
