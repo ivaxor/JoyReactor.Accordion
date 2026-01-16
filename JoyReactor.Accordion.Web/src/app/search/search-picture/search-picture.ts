@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { isIP } from 'is-ip';
-import { SearchService } from '../../services/search-service/search-service';
+import { SearchService } from '../search-service/search-service';
+
 @Component({
   selector: 'app-search-picture',
   imports: [CommonModule, FormsModule],

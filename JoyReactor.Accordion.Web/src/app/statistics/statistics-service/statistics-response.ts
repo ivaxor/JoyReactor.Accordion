@@ -1,0 +1,15 @@
+export interface StatisticsResponse {
+  vectors: number,
+  parsedTags: number,
+  emptyTags: number,
+  parsedPosts: number,
+  parsedPostAttributePictures: number,
+  parsedPostAttributePicturesWithoutVector: number,
+  parsedPostAttributePicturesWithVector: number,
+  parsedPostAttributeEmbeds: number,
+  parsedBandCamps: number,
+  parsedCoubs: number,
+  arsedSoundClouds: number,
+  parsedVimeos: number,
+  parsedYouTubes: number,
+}
