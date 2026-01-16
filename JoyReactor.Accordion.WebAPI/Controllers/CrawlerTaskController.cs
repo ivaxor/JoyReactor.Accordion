@@ -5,27 +5,27 @@ using JoyReactor.Accordion.WebAPI.Models.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JoyReactor.Accordion.WebAPI.Controllers;
 
 [Route("crawlerTasks")]
 [ApiController]
-public class CrawlerTaskController(SqlDatabaseContext sqlDatabaseContext)
+public class CrawlerTaskController(
+    IMemoryCache memoryCache,
+    SqlDatabaseContext sqlDatabaseContext)
     : ControllerBase
 {
     [HttpGet]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     [AllowAnonymous]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken = default)
     {
-        var crawlerTasks = await sqlDatabaseContext.CrawlerTasks
-            .AsNoTracking()
-            .Include(crawlerTask => crawlerTask.Tag)
-            .OrderByDescending(crawlerTask => crawlerTask.Id)
-            .ToArrayAsync(cancellationToken);
-
-        var response = crawlerTasks
-            .Select(crawlerTask => new CrawlerTaskResponse(crawlerTask))
-            .ToArray();
+        const string cacheKey = $"{nameof(CrawlerTaskController)}.{nameof(ListAsync)}";
+        var response = await memoryCache.GetOrCreateAsync(cacheKey, cacheEntry => {
+            cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+            return GetCrawlerTasksAsync(cancellationToken);
+        });        
 
         return Ok(response);
     }
@@ -76,5 +76,20 @@ public class CrawlerTaskController(SqlDatabaseContext sqlDatabaseContext)
         await sqlDatabaseContext.SaveChangesAsync(cancellationToken);
 
         return Ok();
+    }
+
+    protected async Task<CrawlerTaskResponse[]> GetCrawlerTasksAsync(CancellationToken cancellationToken)
+    {
+        var crawlerTasks = await sqlDatabaseContext.CrawlerTasks
+            .AsNoTracking()
+            .Include(crawlerTask => crawlerTask.Tag)
+            .OrderByDescending(crawlerTask => crawlerTask.Id)
+            .ToArrayAsync(cancellationToken);
+
+        var response = crawlerTasks
+            .Select(crawlerTask => new CrawlerTaskResponse(crawlerTask))
+            .ToArray();
+
+        return response;
     }
 }

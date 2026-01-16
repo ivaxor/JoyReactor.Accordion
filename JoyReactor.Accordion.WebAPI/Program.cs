@@ -59,6 +59,7 @@ builder.Services.AddHostedService<ParsedPostAttributePictureImageTypeFixer>();
 builder.Services.AddHostedService<VectorNormalizator>();
 builder.Services.AddHostedService<VectorPostDuplicateRemover>();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationSchemeOptions, ApiKeyAuthenticationSchemeHandler>("ApiKeyAuthenticationScheme", options =>
     {
