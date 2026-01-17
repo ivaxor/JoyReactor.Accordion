@@ -9,7 +9,7 @@ export interface StatisticsResponse {
   parsedPostAttributeEmbeds: number,
   parsedBandCamps: number,
   parsedCoubs: number,
-  arsedSoundClouds: number,
+  parsedSoundClouds: number,
   parsedVimeos: number,
   parsedYouTubes: number,
 }

@@ -1,1 +1,3 @@
-<p>crawler-tasks works!</p>
+@for (crawlerTask of (crawlerTasks ?? []); track $index) {
+<app-crawler-task-info [crawlerTask]="crawlerTask" />
+}

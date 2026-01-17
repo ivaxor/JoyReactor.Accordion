@@ -6,12 +6,12 @@ export const routes: Routes = [
   {
     path: 'search',
     component: SearchRoot,
-    title: 'JR Accordion | Search',
+    title: 'Поиск - JR Accordion',
   },
   {
     path: 'statistics',
     component: StatisticsRoot,
-    title: 'JR Accordion | Statistics',
+    title: 'Статистика - JR Accordion',
   },
   {
     path: '**',

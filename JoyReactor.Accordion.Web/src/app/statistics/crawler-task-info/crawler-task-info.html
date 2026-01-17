@@ -1,1 +1,15 @@
-<p>crawler-task-info works!</p>
+<div class="mt-3">
+  @if(crawlerTask) {
+  {{crawlerTask.tag.name}}
+  } @else {
+  <p class="placeholder-glow"><span class="placeholder col-1"></span></p>
+  }
+
+  @if(!percents) {
+  <p class="placeholder-wave"><span class="placeholder col-12"></span></p>
+  } @else {
+  <div class="progress" role="progressbar" aria-label="Pages" aria-valuemin="0" [aria-valuenow]="percents" aria-valuemax="100">
+    <div class="progress-bar progress-bar-striped progress-bar-animated text-bg-primary" [style.width]="`${percents}%`">{{crawlerTask?.pageCurrent}} / {{crawlerTask?.pageLast}}</div>
+  </div>
+  }
+</div>

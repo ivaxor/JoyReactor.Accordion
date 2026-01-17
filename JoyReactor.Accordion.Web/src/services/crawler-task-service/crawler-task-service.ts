@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { ConfigService } from '../../../services/config-service/config-service';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CrawlerTaskResponse } from './crawler-task-response';
+import { ConfigService } from '../config-service/config-service';
 
 @Injectable({
   providedIn: 'root',

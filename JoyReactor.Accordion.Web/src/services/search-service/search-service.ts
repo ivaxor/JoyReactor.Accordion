@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { SearchResponse } from './search-response';
 import { HttpClient } from '@angular/common/http';
 import { SearchDownloadRequest } from './search-download-request';
-import { ConfigService } from '../../../services/config-service/config-service';
+import { ConfigService } from '../config-service/config-service';
 
 @Injectable({
   providedIn: 'root',

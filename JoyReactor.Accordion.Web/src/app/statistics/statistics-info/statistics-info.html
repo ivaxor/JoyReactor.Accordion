@@ -1,1 +1,126 @@
-<p>statistics-info works!</p>
+<div class="row">
+  <div class="col-sm-4">
+    <fieldset>
+      <legend>Общая</legend>
+
+      <div class="row">
+        <label for="vectors" class="col-sm-4 col-form-label">Векторов</label>
+        <div class="col-sm-8 placeholder-glow">
+          @if (statistics != null) { <input readonly [value]="statistics.vectors" id="vectors" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedPosts" class="col-sm-4 col-form-label">Постов</label>
+        <div class="col-sm-8 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedPosts" id="parsedPosts" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedTags" class="col-sm-4 col-form-label">Теги</label>
+        <div class="col-sm-8 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedTags" id="parsedTags" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="emptyTags" class="col-sm-4 col-form-label">Пустые теги</label>
+        <div class="col-sm-8 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.emptyTags" id="emptyTags" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="col-sm-4">
+    <fieldset>
+      <legend>Изображения</legend>
+
+      <div class="row">
+        <label for="parsedPostAttributePictures" class="col-sm-5 col-form-label">Суммарно</label>
+        <div class="col-sm-7 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedPostAttributePictures" id="parsedPostAttributePictures" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedPostAttributePicturesWithVector" class="col-sm-5 col-form-label">С векторами</label>
+        <div class="col-sm-7 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedPostAttributePicturesWithVector" id="parsedPostAttributePicturesWithVector" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedPostAttributePictures" class="col-sm-5 col-form-label">Без векторов</label>
+        <div class="col-sm-7 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedPostAttributePicturesWithoutVector" id="parsedPostAttributePicturesWithoutVector" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="col-sm-4">
+    <fieldset>
+      <legend>Ссылки</legend>
+
+      <div class="row">
+        <label for="parsedPostAttributeEmbeds" class="col-sm-7 col-form-label">Суммарно</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedPostAttributeEmbeds" id="parsedPostAttributeEmbeds" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedBandCamps" class="col-sm-7 col-form-label">Уникальных BandCamp</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedBandCamps" id="parsedBandCamps" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedCoubs" class="col-sm-7 col-form-label">Уникальных Coub</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedCoubs" id="parsedCoubs" class="form-control-plaintext"> }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedSoundClouds" class="col-sm-7 col-form-label">Уникальных SoundCloud</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedSoundClouds" id="parsedSoundClouds" class="form-control-plaintext">
+          }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedVimeos" class="col-sm-7 col-form-label">Уникальных Vimeo</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedVimeos" id="parsedVimeos" class="form-control-plaintext">
+          }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="parsedYouTubes" class="col-sm-7 col-form-label">Уникальных YouTube</label>
+        <div class="col-sm-5 placeholder-glow">
+          @if (statistics) { <input readonly [value]="statistics.parsedYouTubes" id="parsedYouTubes" class="form-control-plaintext">
+          }
+          @else {<span class="placeholder col-3"></span> }
+        </div>
+      </div>
+    </fieldset>
+  </div>
+</div>
