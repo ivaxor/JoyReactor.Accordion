@@ -48,11 +48,14 @@ body {
 
 .navbar {
   background-color: $dark;
-  
 
   .navbar-brand {
     color: $light;
   }
+}
+
+footer {
+  background-color: $dark;
 }
 
 .form-control,
