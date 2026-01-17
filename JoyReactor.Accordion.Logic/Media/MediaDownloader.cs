@@ -92,6 +92,7 @@ public class MediaDownloader(
         {
             switch (response.StatusCode)
             {
+                case HttpStatusCode.Forbidden:
                 case HttpStatusCode.NotFound:
                     logger.LogWarning("Media not found at {Url}. Status code: {StatusCode}", url, response.StatusCode);
                     return null;
