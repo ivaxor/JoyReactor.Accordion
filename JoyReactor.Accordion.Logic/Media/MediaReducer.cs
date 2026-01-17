@@ -6,6 +6,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System.Net.Mime;
+using System.Reflection;
 
 namespace JoyReactor.Accordion.Logic.Media;
 
@@ -87,36 +88,42 @@ public class MediaReducer(IOptions<MediaSettings> settings)
 
     protected async Task<Image<Rgb24>> ReduceVideoAsync(Stream stream, CancellationToken cancellationToken)
     {
+        var folderPath = Path.Combine(Path.GetTempPath(), Assembly.GetEntryAssembly().GetName().Name);
+        Directory.CreateDirectory(folderPath);
+        var filePath = Path.Combine(folderPath, Guid.NewGuid().ToString());
+
         try
         {
-            await using var inputStream = new MemoryStream();
-            await stream.CopyToAsync(inputStream, cancellationToken);
-            inputStream.Position = 0;
+            await using var fileStream = File.Create(filePath);
+            await stream.CopyToAsync(fileStream, cancellationToken);
+            await fileStream.FlushAsync(cancellationToken);
+            fileStream.Close();
 
-            var mediaAnalysis = await FFProbe.AnalyseAsync(inputStream, cancellationToken: cancellationToken);
-            var seekTo = mediaAnalysis.Duration.TotalSeconds > 0
-                ? TimeSpan.FromTicks(Convert.ToInt32(Math.Round(mediaAnalysis.Duration.Ticks / 2.0)))
-                : TimeSpan.Zero;
-            inputStream.Position = 0;
+            var mediaAnalysis = await FFProbe.AnalyseAsync(filePath, cancellationToken: cancellationToken);
 
-            await using var outputStream = new MemoryStream();
+            await using var imageStream = new MemoryStream();
             await FFMpegArguments
-                .FromPipeInput(new StreamPipeSource(inputStream))
-                .OutputToPipe(new StreamPipeSink(outputStream), options => options
-                    .Seek(seekTo)
+                .FromFileInput(filePath, addArguments: options => options
+                    .Seek(mediaAnalysis.Duration / 2))
+                .OutputToPipe(new StreamPipeSink(imageStream), options => options
                     .WithFrameOutputCount(1)
                     .WithVideoCodec("mjpeg")
                     .ForceFormat("image2"))
                 .ProcessAsynchronously();
-            outputStream.Position = 0;
+            imageStream.Position = 0;
 
-            var image = await Image.LoadAsync<Rgb24>(outputStream, cancellationToken);
+            var image = await Image.LoadAsync<Rgb24>(imageStream, cancellationToken);
             image.Mutate(x => x.Resize(ResizeOptions));
             return image;
         }
         catch (Exception ex)
         {
             throw;
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
         }
     }
 }

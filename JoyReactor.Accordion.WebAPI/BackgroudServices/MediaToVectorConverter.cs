@@ -30,10 +30,8 @@ public class MediaToVectorConverter(
         ParsedPostAttributePictureType.GIF,
         ParsedPostAttributePictureType.BMP,
         ParsedPostAttributePictureType.TIFF,
-        /*
         ParsedPostAttributePictureType.MP4,
         ParsedPostAttributePictureType.WEBM,
-        */
     ];
 
     protected override async Task RunAsync(CancellationToken cancellationToken)
@@ -76,7 +74,7 @@ public class MediaToVectorConverter(
                     await CreateVectorAsync(onnxVectorConverter, failedPictureAttributeIds, pictureVectors, picture, image);
                 }
 
-                logger.LogInformation("Chunk of {PicturesCount} picture post attribute(s) were converted to vectors.", pictures.Length);
+                logger.LogInformation("Chunk of {PicturesCount} picture post attribute(s) were converted to vector(s).", pictures.Length);
             }
 
             var failedPictureVectors = unprocessedPictures.Where(picture => picture.NoContent || picture.UnsupportedContent).ToArray();
@@ -89,7 +87,7 @@ public class MediaToVectorConverter(
             await qdrantClient.UpsertAsync(qdrantSettings.Value.CollectionName, pictureVectors, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            logger.LogInformation("{PicturesCount} picture post attribute(s) were converted and saved as vectors.", pictureVectors.Count);
+            logger.LogInformation("{PicturesCount} picture post attribute(s) were converted and saved as vector(s).", pictureVectors.Count);
         } while (unprocessedPictures.Length != 0);
     }
 

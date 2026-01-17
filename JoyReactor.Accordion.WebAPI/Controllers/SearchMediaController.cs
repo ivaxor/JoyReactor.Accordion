@@ -28,14 +28,13 @@ public class SearchMediaController(
     protected const int FileSizeLimit = 5 * 1024 * 1024;
     protected static readonly FrozenSet<string> AllowedMimeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        //MediaTypeNames.Application.Octet,
         MediaTypeNames.Image.Png,
         MediaTypeNames.Image.Jpeg,
         MediaTypeNames.Image.Gif,
         MediaTypeNames.Image.Bmp,
         MediaTypeNames.Image.Tiff,
-        //"video/mp4",
-        //"video/webm",
+        "video/mp4",
+        "video/webm",
     }.ToFrozenSet();
     protected static readonly FrozenSet<string> AllowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -45,8 +44,8 @@ public class SearchMediaController(
         "gif",
         "tiff",
         "bmp",
-        //"mp4",
-        //"webm",
+        "mp4",
+        "webm",
     }.ToFrozenSet();
 
     [HttpPost("download")]
