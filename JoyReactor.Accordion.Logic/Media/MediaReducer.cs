@@ -116,10 +116,6 @@ public class MediaReducer(IOptions<MediaSettings> settings)
             image.Mutate(x => x.Resize(ResizeOptions));
             return image;
         }
-        catch (Exception ex)
-        {
-            throw;
-        }
         finally
         {
             if (File.Exists(filePath))
