@@ -44,10 +44,6 @@ public class ParsedPostEntityTypeConfiguration : IEntityTypeConfiguration<Parsed
             .HasPrincipalKey(e => e.Id)
             .HasForeignKey(e => e.ApiId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder
-            .Property(e => e.ApiId)
-            .HasDefaultValue(1.ToGuid())
-            .IsRequired(true);
 
         builder
             .HasIndex(e => e.NumberId)

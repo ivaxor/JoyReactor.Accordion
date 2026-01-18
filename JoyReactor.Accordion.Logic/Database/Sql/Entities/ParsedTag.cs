@@ -59,9 +59,6 @@ public class ParsedTagEntityTypeConfiguration : IEntityTypeConfiguration<ParsedT
             .HasPrincipalKey(e => e.Id)
             .HasForeignKey(e => e.ApiId)
             .OnDelete(DeleteBehavior.Restrict);
-        builder
-            .Property(e => e.ApiId)
-            .HasDefaultValue(1.ToGuid());
 
         builder
             .HasOne(e => e.MainTag)
