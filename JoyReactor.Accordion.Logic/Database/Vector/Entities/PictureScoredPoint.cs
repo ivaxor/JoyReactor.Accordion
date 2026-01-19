@@ -10,6 +10,10 @@ public record PictureScoredPoint
     {
         Score = scoredPoint.Score;
 
+        HostName = scoredPoint.Payload.TryGetValue("hostName", out var hostNameValue) && hostNameValue.KindCase == Value.KindOneofCase.StringValue
+            ? hostNameValue.StringValue
+            : null;
+
         PostId = scoredPoint.Payload.TryGetValue("postId", out var postIdValue) && postIdValue.KindCase == Value.KindOneofCase.IntegerValue
             ? Convert.ToInt32(postIdValue.IntegerValue)
             : null;
@@ -28,6 +32,7 @@ public record PictureScoredPoint
     }
 
     public float Score { get; set; }
+    public string HostName { get; set; }
 
     public int? PostId { get; set; }
     public int? PostAttributeId { get; set; }
