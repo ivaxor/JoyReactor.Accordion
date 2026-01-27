@@ -1,12 +1,11 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { SearchMediaHistoryService } from '../../../services/search-media-history-service/search-media-history-service';
 import { SearchMediaHistoryRecord } from '../../../services/search-media-history-service/search-media-history-record';
-import { DatePipe } from '@angular/common';
 import { SearchMediaHistoryInfo } from "../search-media-history-info/search-media-history-info";
 
 @Component({
   selector: 'app-search-media-history',
-  imports: [DatePipe, SearchMediaHistoryInfo],
+  imports: [SearchMediaHistoryInfo],
   templateUrl: './search-media-history.html',
   styleUrl: './search-media-history.scss',
 })

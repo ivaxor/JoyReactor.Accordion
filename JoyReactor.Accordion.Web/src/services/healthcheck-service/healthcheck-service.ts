@@ -21,7 +21,6 @@ export class HealthCheckService {
         mergeMap(config => this.http.get(`${config.apiRoot}/healthz`, { observe: 'response', responseType: 'text' })
           .pipe(
             map(response => {
-              console.log(response);
               const result: HealthCheckResult = {
                 name: 'JR Accordion',
                 success: response.status === 200,

@@ -4,8 +4,8 @@
   </div>
 
   <div class="col text-end">
-    <button [disabled]="historyRecords.length === 0" class="btn btn-danger">
-      <i (click)="onTrashClick()" class="bi bi-trash"></i>
+    <button [disabled]="historyRecords.length === 0" (click)="onTrashClick()" class="btn btn-danger">
+      <i class="bi bi-trash"></i>
     </button>
   </div>
 </div>
