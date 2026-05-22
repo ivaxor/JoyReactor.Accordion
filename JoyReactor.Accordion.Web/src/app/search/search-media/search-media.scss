@@ -1,3 +1,39 @@
+.custom-editable-responsive {
+  display: grid;
+  align-content: center;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+
+  height: calc(1.5em + 0.75rem + 2px);
+  min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+.custom-editable-responsive.disabled {
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.custom-editable-responsive.is-empty::before {
+  content: attr(placeholder);
+  pointer-events: none;
+  display: inline-block;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .custom-editable-responsive {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .custom-editable-responsive.is-empty {
+    padding-top: calc(15vh - 0.75em);
+    padding-bottom: calc(15vh - 0.75em);
+  }
+}
+
 .fall-css-animation {
   position: absolute;
   top: 0;

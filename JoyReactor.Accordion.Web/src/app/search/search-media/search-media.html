@@ -1,25 +1,30 @@
 <form [formGroup]="searchForm">
-  <div (click)="this.fileInput.nativeElement.click()" (drop)="onFileDrop($event)" (dragover)="$event.preventDefault(); $event.stopPropagation(); isDragging = true" (dragleave)="isDragging = false" class="mt-2 min-vh-30 d-flex flex-column align-items-center justify-content-center form-control" [class.border-primary]="isDragging">
-    <input #fileInput type="file" multiple (change)="onFileChange($event)" class="d-none" [accept]="allowedTypes" [disabled]="searching">
-    @if (searching) {
-    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-      <span i18n class="visually-hidden">Поиск...</span>
+  <div class="row g-2">
+    <div class="col-12 col-md-6 d-flex">
+      <div (click)="this.filesInput.nativeElement.click()" (drop)="onFileDrop($event)" (dragover)="$event.preventDefault(); $event.stopPropagation(); isDragging = true" (dragleave)="isDragging = false" class="min-vh-30 d-flex flex-column align-items-center justify-content-center form-control w-100" [class.border-primary]="isDragging">
+        <input #filesInput type="file" multiple (change)="onFileChange($event)" class="d-none" [accept]="allowedTypes" [disabled]="searching">
+        @if (searching) {
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+          <span i18n class="visually-hidden">Поиск...</span>
+        </div>
+        }
+        @else if (files.length > 0) {
+        @for (file of files; track $index) {
+        <span class="fw-bold text-truncate w-100 text-center">{{file.name}}</span>
+        <span class="small w-100 text-center">({{file.size | bytes}})</span>
+        }
+        } @else {
+        <span i18n class="fw-bold">Кликните</span>
+        <span i18n class="small">или перетащите</span>
+        <span i18n class="small">или нажмите Ctrl + V</span>
+        }
+      </div>
     </div>
-    }
-    @else if (files.length > 0) {
-    @for (file of files; track $index) {
-    <span class="fw-bold text-truncate w-100 text-center">{{file.name}}</span>
-    <span class="small w-100 text-center">({{file.size | bytes}})</span>
-    }
-    } @else {
-    <span i18n class="fw-bold">Кликните</span>
-    <span i18n class="small">или перетащите</span>
-    <span i18n class="small">или нажмите Ctrl + V</span>
-    }
-  </div>
 
-  <div class="mt-2">
-    <input formControlName="url" (change)="onUrlChange()" [disabled]="searching" type="url" maxlength="500" class="form-control" placeholder="Или вставьте прямую ссылку..." />
+    <div class="col-12 col-md-6 d-flex">
+      <div #urlsInput [attr.contenteditable]="searching ? 'false' : 'plaintext-only'" role="textbox" aria-multiline="true" [attr.placeholder]="'Или вставьте прямые ссылки...'" class="form-control w-100 text-center custom-editable-responsive" [class.is-empty]="urls.length === 0" [class.disabled]="searching" (input)="onUrlsChange()" (blur)="onUrlsChange()"></div>
+      <textarea formControlName="urls" class="d-none"></textarea>
+    </div>
   </div>
 </form>
 
