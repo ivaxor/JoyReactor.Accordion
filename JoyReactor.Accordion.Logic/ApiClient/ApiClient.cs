@@ -33,7 +33,7 @@ public class ApiClient(
                 return default;
             }
         })
-        .AddTimeout(TimeSpan.FromSeconds(10))
+        .AddTimeout(TimeSpan.FromSeconds(15))
         .Build();
 
     public async Task<T> SendAsync<T>(GraphQLRequest request, CancellationToken cancellationToken)
