@@ -27,7 +27,7 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Condition="'$(OnnxRuntime)' == 'Nvidia'" Version="1.27.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="Polly" Version="8.7.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="4.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageReference Include="Qdrant.Client" Version="1.18.1" />
   </ItemGroup>
 
