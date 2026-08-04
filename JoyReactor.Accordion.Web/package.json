@@ -38,10 +38,10 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@angular/build": "^21.0.0",
+    "@angular/build": "^22.1.2",
     "@angular/cli": "^21.2.0",
-    "@angular/compiler-cli": "^21.0.0",
-    "@angular/localize": "^21.0.6",
+    "@angular/compiler-cli": "^22.1.0",
+    "@angular/localize": "^22.1.0",
     "@types/gtag.js": "^0.0.20",
     "eslint": "^10.0.2",
     "jsdom": "^27.4.0",
